@@ -18,9 +18,9 @@ class Appointment(Base):
     appointmentDate = Column(Date, nullable=False)
     reason = Column(Text, nullable=False)
     status = Column(Enum(AppointmentEnum), default=AppointmentEnum.pending)
-    patientId = Column(Integer, ForeignKey('patients.patientId'), nullable=False, unique=True)
-    doctorId = Column(Integer, ForeignKey('doctors.doctorId'), nullable=False, unique=True)
+    patientId = Column(Integer, ForeignKey('patients.patientId'), nullable=False, unique=True, index=True)
+    doctorId = Column(Integer, ForeignKey('doctors.doctorId'), nullable=False, unique=True, index=True)
     createdAt = Column(DateTime, nullable=False, default=datetime.utcnow())
 
-    patient = relationship("Patient", back_populates="appointments")
-    doctor = relationship("Doctor", back_populates="appointments")
+    patient = relationship("Patient", back_populates="appointment")
+    doctor = relationship("Doctor", back_populates="appointment")

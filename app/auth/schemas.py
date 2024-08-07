@@ -21,6 +21,7 @@ class RegisterSchema(BaseModel):
         with get_db_context() as db:
             if db.query(User).filter_by(email=email).first() is not None:
                 raise HTTPException(status_code=400, detail=f'Email {email} already exist')
+        return email
 
 
 class UserDetails(BaseModel):

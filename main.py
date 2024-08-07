@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app import auth, appointments, users, payments, prescription, billing, patients, medication, doctors
-
 app = FastAPI()
 
 

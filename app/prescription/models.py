@@ -13,8 +13,8 @@ class Prescription(Base):
     dosage = Column(String(50), nullable=False)
     instructions = Column(String(50), nullable=False)
     prescriptionDate = Column(Date, nullable=False)
-    patientId = Column(Integer, ForeignKey('patients.patientId'), nullable=False, unique=True)
-    doctorId = Column(Integer, ForeignKey('doctors.doctorId'), nullable=False, unique=True)
+    patientId = Column(Integer, ForeignKey('patients.patientId'), nullable=False, unique=True, index=True)
+    doctorId = Column(Integer, ForeignKey('doctors.doctorId'), nullable=False, unique=True, index=True)
     createdAt = Column(DateTime, nullable=False, default=datetime.utcnow())
 
     patient = relationship('Patient', back_populates='prescriptions')

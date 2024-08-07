@@ -16,6 +16,6 @@ class Doctor(Base):
     speciality = Column(String(50), nullable=False)
     createdAt = Column(DateTime, nullable=False, default=datetime.utcnow())
 
-    appointments = relationship('Appointment', back_populates='doctor')
+    appointment = relationship('Appointment', back_populates='doctor')
     medications = relationship('Medication', back_populates='doctor')
     prescriptions = relationship('Prescription', back_populates='doctor')
