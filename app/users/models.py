@@ -1,10 +1,17 @@
-from datetime import datetime
+import os
+from datetime import datetime, timedelta
 import enum
 
 import bcrypt
+import jwt
+from fastapi import Depends, HTTPException
 from sqlalchemy import Column, Integer, String, Enum, DateTime
+from sqlalchemy.orm import Session
 
-from app.utils.database import Base
+from app.users import oauth2_scheme
+from app.utils.database import Base, get_db
+
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 
 class Role(enum.Enum):
@@ -21,17 +28,50 @@ class User(Base):
     lastName = Column(String(50), nullable=False)
     role = Column(Enum(Role), nullable=False, default=Role.patient)
     email = Column(String(255), nullable=False)
-    password = Column(String(255), nullable=False)
+    password_hash = Column(String(255), nullable=False)
     createdAt = Column(DateTime, nullable=False, default=datetime.utcnow())
 
     @property
-    def hash_password(self):
-        return self.password
+    def password(self):
+        return self.password_hash
 
-    @hash_password.setter
-    def hash_password(self, password: str):
-        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-        self.password = hashed_password.decode('utf-8')
+    @password.setter
+    def password(self, raw_password: str):
+        hashed_password = bcrypt.hashpw(raw_password.encode('utf-8'), bcrypt.gensalt())
+        self.password_hash = hashed_password.decode('utf-8')
 
-    def verify_password(self, password: str):
-        return bcrypt.checkpw(password.encode('utf-8'), self.password.encode('utf-8'))
+    def check_password(self, password) -> bool:
+        return bcrypt.checkpw(password.encode('utf-8'), self.password_hash.encode('utf-8'))
+
+
+# create jwt access token
+def create_access_token(user: User):
+    return jwt.encode({
+        "exp": datetime.utcnow() + timedelta(hours=2),
+        'userId': user.userId,
+        'role': user.role.value,
+    }, SECRET_KEY, algorithm='HS256')
+
+
+# decode the jwt access token to get userId
+def load_user_from_access_token(token, db):
+    try:
+        data = jwt.decode(token, SECRET_KEY, algorithms='HS256')
+        userId = data.get('userId')
+        return db.query(User).filter_by(userId=userId).first()
+    except Exception:
+        return None
+
+
+# get the current logged-in user from the jwt token
+def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
+    user = load_user_from_access_token(token, db)
+    if not user:
+        raise HTTPException(status_code=401, detail='Could not validate credentials')
+    return user
+
+
+# get user role from the jwt and give access to admin routes
+def require_admin(current_user: User = Depends(get_current_user)):
+    if not current_user or current_user.role.value != 'admin':
+        raise HTTPException(status_code=403, detail="Unauthorized! Admin Only")
