@@ -3,7 +3,6 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 
 from app.users.models import Role
-from app.utils.pagination import Paginator
 
 
 class AddUser(BaseModel):
@@ -23,7 +22,7 @@ class Users(BaseModel):
     createdAt: datetime
 
 
-class ListUsers(Paginator):
+class ListUsers(BaseModel):
     items: list[Users]
     total: int
     count: int

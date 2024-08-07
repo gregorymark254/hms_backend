@@ -47,7 +47,7 @@ class User(Base):
 # create jwt access token
 def create_access_token(user: User):
     return jwt.encode({
-        "exp": datetime.utcnow() + timedelta(hours=2),
+        "exp": datetime.utcnow() + timedelta(hours=3),
         'userId': user.userId,
         'role': user.role.value,
     }, SECRET_KEY, algorithm='HS256')
@@ -67,7 +67,7 @@ def load_user_from_access_token(token, db):
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
     user = load_user_from_access_token(token, db)
     if not user:
-        raise HTTPException(status_code=401, detail='Could not validate credentials')
+        raise HTTPException(status_code=401, detail='You are not authenticated or Invalid Token')
     return user
 
 

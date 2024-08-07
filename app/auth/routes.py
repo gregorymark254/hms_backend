@@ -25,12 +25,12 @@ def get_access_token(email: str, password: str, db: Session):
 
 
 @router.post('/', response_model=schemas.AuthToken)
-def login(request: schemas.AuthSchema, db: Session = Depends(get_db)):
+async def login(request: schemas.AuthSchema, db: Session = Depends(get_db)):
     return get_access_token(request.email, request.password, db)
 
 
 @router.post('/register')
-def register(request: schemas.RegisterSchema, db: Session = Depends(get_db)):
+async def register(request: schemas.RegisterSchema, db: Session = Depends(get_db)):
     user = models.User(**request.model_dump())
     db.add(user)
     db.commit()
@@ -39,6 +39,6 @@ def register(request: schemas.RegisterSchema, db: Session = Depends(get_db)):
 
 
 @router.post('/docs-login', response_model=schemas.AuthToken, include_in_schema=False)
-def docs_login(request: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+async def docs_login(request: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     return get_access_token(request.username, request.password, db)
 
