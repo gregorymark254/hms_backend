@@ -9,7 +9,7 @@ from app.utils.database import Base
 class Payment(Base):
     __tablename__ = 'payments'
     paymentId = Column(Integer, primary_key=True, autoincrement=True)
-    transactionId = Column(Integer, nullable=False)
+    transactionId = Column(Integer, nullable=False, unique=True, index=True)
     amount = Column(Integer, nullable=False)
     paymentMethod = Column(String(20), nullable=False)
     paymentDate = Column(DateTime, nullable=False)
@@ -17,5 +17,4 @@ class Payment(Base):
     billingId = Column(Integer, ForeignKey('billing.billingId'), nullable=False, index=True)
     createdAt = Column(DateTime, default=datetime.utcnow())
 
-    patient = relationship("Patient", back_populates="payments")
-    billing = relationship("Billing", back_populates="payments")
+    billings = relationship("Billing", back_populates="payment")

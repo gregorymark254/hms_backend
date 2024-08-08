@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date
 
 from pydantic import BaseModel
 
@@ -7,16 +7,17 @@ class AddPatientSchema(BaseModel):
     firstName: str
     lastName: str
     email: str
-    dateOfBirth: str
+    dateOfBirth: date
     gender: str
     address: str
     phoneNumber: str
-    emergencyNUmber: str
+    emergencyNumber: str
     insuranceNumber: str
     insuranceName: str
 
 
 class PatientSchema(AddPatientSchema):
+    patientId: int
     createdAt: datetime
 
 

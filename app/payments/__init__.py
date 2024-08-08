@@ -2,4 +2,4 @@ from fastapi import APIRouter
 
 router = APIRouter()
 
-from . import routes
+from . import routes, models

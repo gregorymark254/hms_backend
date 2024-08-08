@@ -27,7 +27,7 @@ class User(Base):
     firstName = Column(String(50), nullable=False)
     lastName = Column(String(50), nullable=False)
     role = Column(Enum(Role), nullable=False, default=Role.patient)
-    email = Column(String(255), nullable=False)
+    email = Column(String(255), nullable=False, index=True)
     password_hash = Column(String(255), nullable=False)
     createdAt = Column(DateTime, nullable=False, default=datetime.utcnow())
 

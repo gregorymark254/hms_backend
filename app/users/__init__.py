@@ -4,4 +4,4 @@ router = APIRouter()
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/auth/docs-login')
 
-from . import routes
+from . import routes, models

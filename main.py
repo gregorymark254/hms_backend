@@ -1,11 +1,14 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+# Import Base here for discovery by alembic
+from app.utils.database import Base
 from app import auth, appointments, users, payments, prescription, billing, patients, medication, doctors
 app = FastAPI()
 
 
 origins = [
     "http://localhost:3000",
+    "https://medixsolutions.vercel.app"
 ]
 
 app.add_middleware(

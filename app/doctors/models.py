@@ -11,11 +11,10 @@ class Doctor(Base):
     doctorId = Column(Integer, primary_key=True, autoincrement=True)
     firstName = Column(String(50), nullable=False)
     lastName = Column(String(50), nullable=False)
-    email = Column(String(255), nullable=False)
+    email = Column(String(255), nullable=False, index=True)
     phoneNumber = Column(String(50), nullable=False)
     speciality = Column(String(50), nullable=False)
     createdAt = Column(DateTime, nullable=False, default=datetime.utcnow())
 
-    appointment = relationship('Appointment', back_populates='doctor')
     medications = relationship('Medication', back_populates='doctor')
     prescriptions = relationship('Prescription', back_populates='doctor')

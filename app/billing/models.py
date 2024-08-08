@@ -12,8 +12,7 @@ class Billing(Base):
     amount = Column(Integer, nullable=False)
     billingDate = Column(Date, nullable=False)
     status = Column(Integer, nullable=False)
-    patientId = Column(Integer, ForeignKey('patients.patientId'), nullable=False, unique=True, index=True)
+    patientId = Column(Integer, ForeignKey('patients.patientId'), nullable=False, index=True)
     createdAt = Column(DateTime, nullable=False, default=datetime.utcnow())
 
-    patient = relationship('Patient', back_populates='billing')
-    payments = relationship('Payment', back_populates='billing')
+    payment = relationship('Payment', back_populates='billings')
