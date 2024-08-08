@@ -1,7 +1,6 @@
 from datetime import datetime
 
 from sqlalchemy import Column, Integer, String, DateTime
-from sqlalchemy.orm import relationship
 
 from app.utils.database import Base
 
@@ -16,5 +15,3 @@ class Doctor(Base):
     speciality = Column(String(50), nullable=False)
     createdAt = Column(DateTime, nullable=False, default=datetime.utcnow())
 
-    medications = relationship('Medication', back_populates='doctor')
-    prescriptions = relationship('Prescription', back_populates='doctor')

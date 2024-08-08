@@ -1,8 +1,8 @@
 """initial migration
 
-Revision ID: f46538b61da7
+Revision ID: 60948a7ed2e5
 Revises: 
-Create Date: 2024-08-08 11:36:17.193367
+Create Date: 2024-08-08 23:39:07.030858
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'f46538b61da7'
+revision: str = '60948a7ed2e5'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -47,6 +47,15 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('patientId')
     )
     op.create_index(op.f('ix_patients_email'), 'patients', ['email'], unique=False)
+    op.create_table('prescription',
+    sa.Column('prescriptionId', sa.Integer(), autoincrement=True, nullable=False),
+    sa.Column('prescriptionName', sa.String(length=50), nullable=False),
+    sa.Column('dosage', sa.String(length=50), nullable=False),
+    sa.Column('instructions', sa.String(length=50), nullable=False),
+    sa.Column('prescriptionDate', sa.Date(), nullable=False),
+    sa.Column('createdAt', sa.DateTime(), nullable=False),
+    sa.PrimaryKeyConstraint('prescriptionId')
+    )
     op.create_table('users',
     sa.Column('userId', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('firstName', sa.String(length=50), nullable=False),
@@ -84,35 +93,20 @@ def upgrade() -> None:
     )
     op.create_index(op.f('ix_billing_patientId'), 'billing', ['patientId'], unique=False)
     op.create_table('medication',
-    sa.Column('medicationIid', sa.Integer(), autoincrement=True, nullable=False),
+    sa.Column('medicationId', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('diagnosis', sa.String(length=255), nullable=False),
     sa.Column('treatment', sa.String(length=255), nullable=False),
     sa.Column('notes', sa.String(length=255), nullable=False),
     sa.Column('recordDate', sa.DateTime(), nullable=False),
     sa.Column('patientId', sa.Integer(), nullable=False),
-    sa.Column('doctorId', sa.Integer(), nullable=False),
+    sa.Column('prescriptionId', sa.Integer(), nullable=False),
     sa.Column('createdAt', sa.DateTime(), nullable=True),
-    sa.ForeignKeyConstraint(['doctorId'], ['doctors.doctorId'], ),
     sa.ForeignKeyConstraint(['patientId'], ['patients.patientId'], ),
-    sa.PrimaryKeyConstraint('medicationIid')
+    sa.ForeignKeyConstraint(['prescriptionId'], ['prescription.prescriptionId'], ),
+    sa.PrimaryKeyConstraint('medicationId')
     )
-    op.create_index(op.f('ix_medication_doctorId'), 'medication', ['doctorId'], unique=False)
     op.create_index(op.f('ix_medication_patientId'), 'medication', ['patientId'], unique=False)
-    op.create_table('prescription',
-    sa.Column('prescriptionId', sa.Integer(), autoincrement=True, nullable=False),
-    sa.Column('prescriptionName', sa.String(length=50), nullable=False),
-    sa.Column('dosage', sa.String(length=50), nullable=False),
-    sa.Column('instructions', sa.String(length=50), nullable=False),
-    sa.Column('prescriptionDate', sa.Date(), nullable=False),
-    sa.Column('patientId', sa.Integer(), nullable=False),
-    sa.Column('doctorId', sa.Integer(), nullable=False),
-    sa.Column('createdAt', sa.DateTime(), nullable=False),
-    sa.ForeignKeyConstraint(['doctorId'], ['doctors.doctorId'], ),
-    sa.ForeignKeyConstraint(['patientId'], ['patients.patientId'], ),
-    sa.PrimaryKeyConstraint('prescriptionId')
-    )
-    op.create_index(op.f('ix_prescription_doctorId'), 'prescription', ['doctorId'], unique=False)
-    op.create_index(op.f('ix_prescription_patientId'), 'prescription', ['patientId'], unique=False)
+    op.create_index(op.f('ix_medication_prescriptionId'), 'medication', ['prescriptionId'], unique=False)
     op.create_table('payments',
     sa.Column('paymentId', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('transactionId', sa.Integer(), nullable=False),
@@ -138,11 +132,8 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_payments_patientId'), table_name='payments')
     op.drop_index(op.f('ix_payments_billingId'), table_name='payments')
     op.drop_table('payments')
-    op.drop_index(op.f('ix_prescription_patientId'), table_name='prescription')
-    op.drop_index(op.f('ix_prescription_doctorId'), table_name='prescription')
-    op.drop_table('prescription')
+    op.drop_index(op.f('ix_medication_prescriptionId'), table_name='medication')
     op.drop_index(op.f('ix_medication_patientId'), table_name='medication')
-    op.drop_index(op.f('ix_medication_doctorId'), table_name='medication')
     op.drop_table('medication')
     op.drop_index(op.f('ix_billing_patientId'), table_name='billing')
     op.drop_table('billing')
@@ -151,6 +142,7 @@ def downgrade() -> None:
     op.drop_table('appointments')
     op.drop_index(op.f('ix_users_email'), table_name='users')
     op.drop_table('users')
+    op.drop_table('prescription')
     op.drop_index(op.f('ix_patients_email'), table_name='patients')
     op.drop_table('patients')
     op.drop_index(op.f('ix_doctors_email'), table_name='doctors')

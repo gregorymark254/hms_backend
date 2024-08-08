@@ -8,10 +8,12 @@ from ..utils.pagination import Paginator, Pagination
 
 
 @router.get('/', response_model=schemas.ListAppointment, dependencies=[Depends(get_current_user)])
-async def get_appointments(db: Session = Depends(get_db), pagination: Paginator = Depends(), patientId: int | None = None):
+async def get_appointments(db: Session = Depends(get_db), pagination: Paginator = Depends(), patientId: int | None = None, doctorId: int | None = None):
     query = db.query(models.Appointment)
     if patientId:
         query = query.filter_by(patientId=patientId)
+    if doctorId:
+        query = query.filter_by(doctorId=doctorId)
     total = query.count()
     appointment = query.offset(pagination.offset).limit(pagination.limit).all()
     count = len(appointment)
