@@ -21,7 +21,7 @@ async def get_appointments(db: Session = Depends(get_db), pagination: Paginator 
 
 
 @router.post('/', response_model=schemas.AppointmentSchema, dependencies=[Depends(get_current_user)])
-async  def add_appointment(request: schemas.AddAppointment, db: Session = Depends(get_db)):
+async def add_appointment(request: schemas.AddAppointment, db: Session = Depends(get_db)):
     new_appointment = models.Appointment(**request.model_dump())
     db.add(new_appointment)
     db.commit()

@@ -32,3 +32,24 @@ async def get_patient_by_id(patientId: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="User not found")
     return query
 
+
+@router.put('/{patientId}', dependencies=[Depends(get_current_user)])
+async def update_patient(patientId: int, request: schemas.UpdatePatient, db: Session = Depends(get_db)):
+    query = db.query(models.Patient).filter_by(patientId=patientId).first()
+    if not query:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    query.firstName = request.firstName
+    query.lastName = request.lastName
+    query.dateOfBirth = request.dateOfBirth
+    query.gender = request.gender
+    query.address = request.address
+    query.phoneNumber = request.phoneNumber
+    query.emergencyNumber = request.emergencyNumber
+    query.insuranceNumber = request.insuranceNumber
+    query.insuranceName = request.insuranceName
+
+    db.commit()
+    db.refresh(query)
+
+    return {'message': f'patient {query.email} updated'}

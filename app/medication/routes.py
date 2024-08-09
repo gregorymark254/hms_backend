@@ -8,8 +8,10 @@ from ..utils.pagination import Pagination, Paginator
 
 
 @router.get('/', response_model=schemas.ListMedications, dependencies=[Depends(get_current_user)])
-async def get_medication(db: Session = Depends(get_db), pagination: Paginator = Depends()):
+async def get_medication(db: Session = Depends(get_db), pagination: Paginator = Depends(), patientId: int | None = None):
     query = db.query(models.Medication)
+    if patientId:
+        query = query.filter_by(patientId=patientId)
     total = query.count()
     medication = query.offset(pagination.offset).limit(pagination.limit).all()
     count = len(medication)

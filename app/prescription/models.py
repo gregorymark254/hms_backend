@@ -11,5 +11,5 @@ class Prescription(Base):
     prescriptionName = Column(String(50), nullable=False)
     dosage = Column(String(50), nullable=False)
     instructions = Column(String(50), nullable=False)
-    prescriptionDate = Column(Date, nullable=False)
+    duration = Column(String(10), nullable=False)
     createdAt = Column(DateTime, nullable=False, default=datetime.utcnow())

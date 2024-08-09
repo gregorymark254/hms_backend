@@ -11,7 +11,6 @@ class Medication(Base):
     diagnosis = Column(String(255), nullable=False)
     treatment = Column(String(255), nullable=False)
     notes = Column(String(255), nullable=False)
-    recordDate = Column(DateTime, nullable=False)
     patientId = Column(Integer, ForeignKey('patients.patientId'), nullable=False, index=True)
     prescriptionId = Column(Integer, ForeignKey('prescription.prescriptionId'), nullable=False, index=True)
     createdAt = Column(DateTime, default=datetime.utcnow())
