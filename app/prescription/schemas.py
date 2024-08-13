@@ -7,9 +7,7 @@ class AddPrescription(BaseModel):
     prescriptionName: str
     dosage: str
     instructions: str
-    prescriptionDate: datetime
-    patientId: int
-    doctorId: int
+    duration: str
 
 
 class Prescription(AddPrescription):

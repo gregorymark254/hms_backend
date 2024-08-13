@@ -22,7 +22,7 @@ class Role(enum.Enum):
 
 
 class User(Base):
-    __tablename__ = 'users'
+    __tablename__ = 'new-users'
     userId = Column(Integer, primary_key=True, autoincrement=True)
     firstName = Column(String(50), nullable=False)
     lastName = Column(String(50), nullable=False)

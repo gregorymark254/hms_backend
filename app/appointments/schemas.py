@@ -6,13 +6,13 @@ from pydantic import BaseModel, ConfigDict
 class AddAppointment(BaseModel):
     appointmentDate: date
     reason: str
-    status: str
     patientId: int
     doctorId: int
 
 
 class AppointmentSchema(AddAppointment):
     appointmentId: int
+    status: str
     createdAt: datetime
 
     model_config = ConfigDict(from_attributes=True)

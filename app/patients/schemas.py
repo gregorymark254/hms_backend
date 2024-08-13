@@ -16,6 +16,18 @@ class AddPatientSchema(BaseModel):
     insuranceName: str
 
 
+class UpdatePatient(BaseModel):
+    firstName: str
+    lastName: str
+    dateOfBirth: date
+    gender: str
+    address: str
+    phoneNumber: str
+    emergencyNumber: str
+    insuranceNumber: str
+    insuranceName: str
+
+
 class PatientSchema(AddPatientSchema):
     patientId: int
     createdAt: datetime

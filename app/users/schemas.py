@@ -31,6 +31,12 @@ class Users(BaseModel):
     createdAt: datetime
 
 
+class UpdateUser(BaseModel):
+    firstName: str
+    lastName: str
+    role: str
+
+
 class ListUsers(BaseModel):
     items: list[Users]
     total: int

@@ -27,4 +27,4 @@ services:
     depends_on:
       - mysql
 
-    command: bash -c "alembic upgrade head && python initialize.py && uvicorn main:app --host 0.0.0.0"
+    command: bash -c "alembic upgrade head && uvicorn main:app --host 0.0.0.0"

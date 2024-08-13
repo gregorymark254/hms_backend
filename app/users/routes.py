@@ -37,3 +37,18 @@ async def get_user_by_id(userId: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="User not found")
     else:
         return user
+
+
+@router.put('/{userId}', dependencies=[Depends(get_current_user)])
+async def update_user(userId: int, request: schemas.UpdateUser, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter_by(userId=userId).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user.firstName = request.firstName
+    user.lastName = request.lastName
+    user.role = request.role
+
+    db.commit()
+    db.refresh(user)
+    return {'message': f'User {user.email} has been updated.'}

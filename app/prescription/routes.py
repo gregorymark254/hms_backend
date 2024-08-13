@@ -1,4 +1,4 @@
-from fastapi import Depends
+from fastapi import Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from . import router, schemas, models
@@ -23,3 +23,29 @@ async def create_prescription(request: schemas.AddPrescription, db: Session = De
     db.commit()
     db.refresh(new_prescription)
     return new_prescription
+
+
+@router.get('/{prescriptionId}', response_model=schemas.Prescription, dependencies=[Depends(get_current_user)])
+async def get_prescription_by_id(prescriptionId: int, db: Session = Depends(get_db)):
+    query = db.query(models.Prescription).filter_by(prescriptionId=prescriptionId).first()
+    if not query:
+        raise HTTPException(status_code=404, detail='Prescription not found')
+
+    return query
+
+
+@router.put('/{prescriptionId}', dependencies=[Depends(get_current_user)])
+async def update_prescription(prescriptionId: str, request:schemas.AddPrescription, db: Session = Depends(get_db)):
+    query = db.query(models.Prescription).filter_by(prescriptionId=prescriptionId).first()
+    if not query:
+        raise HTTPException(status_code=404, detail='Prescription not found')
+
+    query.prescriptionName = request.prescriptionName
+    query.dosage = request.dosage
+    query.instructions = request.instructions
+    query.duration = request.duration
+
+    db.commit()
+    db.refresh(query)
+
+    return {'message': f'prescription {query.prescriptionName} updated'}

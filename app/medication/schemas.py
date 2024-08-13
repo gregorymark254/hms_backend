@@ -7,13 +7,12 @@ class AddMedication(BaseModel):
     diagnosis: str
     treatment: str
     notes: str
-    recordDate: datetime
-    patientID: int
-    doctorID: int
+    patientId: int
+    prescriptionId: int
 
 
 class Medication(AddMedication):
-    medicationIid: int
+    medicationId: int
     createdAt: datetime
 
 
