@@ -1,8 +1,8 @@
-"""Initial migration
+"""migration
 
-Revision ID: 7d0f97328866
+Revision ID: 63a02ecb0d4d
 Revises: 
-Create Date: 2024-08-15 20:52:15.921643
+Create Date: 2024-08-16 17:59:37.654314
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '7d0f97328866'
+revision: str = '63a02ecb0d4d'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -31,17 +31,17 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('doctorId')
     )
     op.create_index(op.f('ix_doctors_email'), 'doctors', ['email'], unique=False)
-    op.create_table('new-users',
+    op.create_table('new_users',
     sa.Column('userId', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('firstName', sa.String(length=50), nullable=False),
     sa.Column('lastName', sa.String(length=50), nullable=False),
-    sa.Column('role', sa.Enum('admin', 'doctor', 'patient', 'pharmacy', name='role'), nullable=False),
+    sa.Column('role', sa.Enum('admin', 'doctor', 'pharmacy', 'reception', name='role'), nullable=False),
     sa.Column('email', sa.String(length=255), nullable=False),
     sa.Column('password_hash', sa.String(length=255), nullable=False),
     sa.Column('createdAt', sa.DateTime(), nullable=False),
     sa.PrimaryKeyConstraint('userId')
     )
-    op.create_index(op.f('ix_new-users_email'), 'new-users', ['email'], unique=False)
+    op.create_index(op.f('ix_new_users_email'), 'new_users', ['email'], unique=False)
     op.create_table('patients',
     sa.Column('patientId', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('firstName', sa.String(length=50), nullable=False),
@@ -85,7 +85,7 @@ def upgrade() -> None:
     sa.Column('billingId', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('amount', sa.Integer(), nullable=False),
     sa.Column('billingDate', sa.Date(), nullable=False),
-    sa.Column('status', sa.Integer(), nullable=False),
+    sa.Column('status', sa.Enum('pending', 'paid', name='billingenum'), nullable=True),
     sa.Column('patientId', sa.Integer(), nullable=False),
     sa.Column('createdAt', sa.DateTime(), nullable=False),
     sa.ForeignKeyConstraint(['patientId'], ['patients.patientId'], ),
@@ -108,7 +108,7 @@ def upgrade() -> None:
     op.create_index(op.f('ix_medication_prescriptionId'), 'medication', ['prescriptionId'], unique=False)
     op.create_table('payments',
     sa.Column('paymentId', sa.Integer(), autoincrement=True, nullable=False),
-    sa.Column('transactionId', sa.Integer(), nullable=False),
+    sa.Column('transactionId', sa.String(length=10), nullable=False),
     sa.Column('amount', sa.Integer(), nullable=False),
     sa.Column('paymentMethod', sa.String(length=20), nullable=False),
     sa.Column('paymentDate', sa.DateTime(), nullable=False),
@@ -142,8 +142,8 @@ def downgrade() -> None:
     op.drop_table('prescription')
     op.drop_index(op.f('ix_patients_email'), table_name='patients')
     op.drop_table('patients')
-    op.drop_index(op.f('ix_new-users_email'), table_name='new-users')
-    op.drop_table('new-users')
+    op.drop_index(op.f('ix_new_users_email'), table_name='new_users')
+    op.drop_table('new_users')
     op.drop_index(op.f('ix_doctors_email'), table_name='doctors')
     op.drop_table('doctors')
     # ### end Alembic commands ###

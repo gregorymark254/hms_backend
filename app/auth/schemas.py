@@ -13,7 +13,7 @@ class RegisterSchema(BaseModel):
     firstName: str
     lastName: str
     email: str
-    role: Role = Field(Role.patient, alias='role')
+    role: Role = Field(Role.reception, alias='role')
     password: str = Field(..., min_length=8)
 
     @field_validator('email')

@@ -17,8 +17,8 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 class Role(enum.Enum):
     admin = 'admin'
     doctor = 'doctor'
-    patient = 'patient'
     pharmacy = 'pharmacy'
+    reception = 'reception'
 
 
 class User(Base):
@@ -26,7 +26,7 @@ class User(Base):
     userId = Column(Integer, primary_key=True, autoincrement=True)
     firstName = Column(String(50), nullable=False)
     lastName = Column(String(50), nullable=False)
-    role = Column(Enum(Role), nullable=False, default=Role.patient)
+    role = Column(Enum(Role), nullable=False, default=Role.reception)
     email = Column(String(255), nullable=False, index=True)
     password_hash = Column(String(255), nullable=False)
     createdAt = Column(DateTime, nullable=False, default=datetime.utcnow())
@@ -74,4 +74,4 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
 # get user role from the jwt and give access to admin routes
 def require_admin(current_user: User = Depends(get_current_user)):
     if not current_user or current_user.role.value != 'admin':
-        raise HTTPException(status_code=403, detail="Unauthorized! Admin Only")
+        raise HTTPException(status_code=403, detail="Unauthorized! Admin role required.")

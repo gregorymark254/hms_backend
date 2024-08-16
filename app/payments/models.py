@@ -9,7 +9,7 @@ from app.utils.database import Base
 class Payment(Base):
     __tablename__ = 'payments'
     paymentId = Column(Integer, primary_key=True, autoincrement=True)
-    transactionId = Column(Integer, nullable=False, unique=True, index=True)
+    transactionId = Column(String(10), nullable=False, unique=True, index=True)
     amount = Column(Integer, nullable=False)
     paymentMethod = Column(String(20), nullable=False)
     paymentDate = Column(DateTime, nullable=False)
