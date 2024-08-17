@@ -2,7 +2,7 @@ from fastapi import Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from . import router, schemas, models
-from ..users.models import get_current_user
+from ..users.models import get_current_user, get_admin_or_pharmacy
 from ..utils.database import get_db
 from ..utils.pagination import Pagination, Paginator
 
@@ -16,7 +16,7 @@ async def get_prescriptions(db: Session = Depends(get_db), pagination: Paginator
     return Pagination(items=prescriptions, total=total, count=count)
 
 
-@router.post('/', response_model=schemas.Prescription, dependencies=[Depends(get_current_user)])
+@router.post('/', response_model=schemas.Prescription, dependencies=[Depends(get_admin_or_pharmacy)])
 async def create_prescription(request: schemas.AddPrescription, db: Session = Depends(get_db)):
     new_prescription = models.Prescription(**request.model_dump())
     db.add(new_prescription)
@@ -34,7 +34,7 @@ async def get_prescription_by_id(prescriptionId: int, db: Session = Depends(get_
     return query
 
 
-@router.put('/{prescriptionId}', dependencies=[Depends(get_current_user)])
+@router.put('/{prescriptionId}', dependencies=[Depends(get_admin_or_pharmacy)])
 async def update_prescription(prescriptionId: str, request:schemas.AddPrescription, db: Session = Depends(get_db)):
     query = db.query(models.Prescription).filter_by(prescriptionId=prescriptionId).first()
     if not query:

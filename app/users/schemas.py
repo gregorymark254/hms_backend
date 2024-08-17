@@ -41,3 +41,10 @@ class ListUsers(BaseModel):
     items: list[Users]
     total: int
     count: int
+
+class UserOut(BaseModel):
+    userId: int
+    createdAt: datetime
+
+    class Config:
+        orm_mode = True

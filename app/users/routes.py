@@ -2,12 +2,12 @@ from fastapi import Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from . import router, schemas, models
-from .models import get_current_user
+from .models import get_current_user, get_admin
 from ..utils.database import get_db
 from ..utils.pagination import Pagination, Paginator
 
 
-@router.get('/', response_model=schemas.ListUsers, dependencies=[Depends(get_current_user)])
+@router.get('/', response_model=schemas.ListUsers, dependencies=[Depends(get_admin)])
 async def get_users(db: Session = Depends(get_db), pagination: Paginator = Depends()):
     query = db.query(models.User)
     total = query.count()
@@ -16,7 +16,7 @@ async def get_users(db: Session = Depends(get_db), pagination: Paginator = Depen
     return Pagination(items=users, total=total, count=count)
 
 
-@router.post('/', response_model=schemas.Users, dependencies=[Depends(get_current_user)])
+@router.post('/', response_model=schemas.Users, dependencies=[Depends(get_admin)])
 async def add_user(user: schemas.AddUser, db: Session = Depends(get_db)):
     new_user = models.User(**user.model_dump())
     db.add(new_user)
@@ -30,7 +30,7 @@ async def get_current_user_details(current_user: models.User = Depends(get_curre
     return current_user
 
 
-@router.get('/{userId}', response_model=schemas.Users, dependencies=[Depends(get_current_user)])
+@router.get('/{userId}', response_model=schemas.Users, dependencies=[Depends(get_admin)])
 async def get_user_by_id(userId: int, db: Session = Depends(get_db)):
     user = db.query(models.User).filter_by(userId=userId).first()
     if not user:
@@ -39,7 +39,7 @@ async def get_user_by_id(userId: int, db: Session = Depends(get_db)):
         return user
 
 
-@router.put('/{userId}', dependencies=[Depends(get_current_user)])
+@router.put('/{userId}', dependencies=[Depends(get_admin)])
 async def update_user(userId: int, request: schemas.UpdateUser, db: Session = Depends(get_db)):
     user = db.query(models.User).filter_by(userId=userId).first()
     if not user:

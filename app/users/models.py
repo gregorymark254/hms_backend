@@ -72,6 +72,18 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
 
 
 # get user role from the jwt and give access to admin routes
-def require_admin(current_user: User = Depends(get_current_user)):
+def get_admin(current_user: User = Depends(get_current_user)):
     if not current_user or current_user.role.value != 'admin':
         raise HTTPException(status_code=403, detail="Unauthorized! Admin role required.")
+
+
+# get user role from the jwt and give access to admin or pharmacy routes
+def get_admin_or_pharmacy(current_user: User = Depends(get_current_user)):
+    if not current_user or current_user.role.value != 'admin' or current_user.role.value != 'pharmacy':
+        raise HTTPException(status_code=403, detail="Unauthorized! Admin or Pharmacy role required.")
+
+
+# get user role from the jwt and give access to admin or doctor routes
+def get_admin_or_doctor(current_user: User = Depends(get_current_user)):
+    if not current_user or current_user.role.value != 'admin' or current_user.role.value != 'doctor':
+        raise HTTPException(status_code=403, detail="Unauthorized! Admin or Pharmacy role required.")

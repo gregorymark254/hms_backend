@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlalchemy import Column, Integer, String, Date, DateTime, func
 
 from app.utils.database import Base
@@ -10,10 +12,10 @@ class Patient(Base):
     lastName = Column(String(50), nullable=False)
     dateOfBirth = Column(Date, nullable=False)
     gender = Column(String(10), nullable=False)
-    address = Column(String(20), nullable=False)
+    address = Column(String(50), nullable=False)
     phoneNumber = Column(String(20), nullable=False)
     email = Column(String(255), nullable=False, index=True)
     emergencyNumber = Column(String(20), nullable=False)
     insuranceNumber = Column(String(20), nullable=False)
     insuranceName = Column(String(50), nullable=False)
-    createdAt = Column(DateTime, nullable=False, default=func.now())
+    createdAt = Column(DateTime, nullable=False, default=datetime.utcnow())

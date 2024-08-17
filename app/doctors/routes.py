@@ -2,7 +2,7 @@ from fastapi import Depends
 from sqlalchemy.orm import Session
 
 from . import router, schemas, models
-from ..users.models import get_current_user
+from ..users.models import get_current_user, get_admin
 from ..utils.database import get_db
 from ..utils.pagination import Pagination, Paginator
 
@@ -16,7 +16,7 @@ def get_doctors(db: Session = Depends(get_db), pagination: Paginator = Depends()
     return Pagination(items=doctors, total=total, count=count)
 
 
-@router.post('/', response_model=schemas.DoctorSchema, dependencies=[Depends(get_current_user)])
+@router.post('/', response_model=schemas.DoctorSchema, dependencies=[Depends(get_admin)])
 async def add_doctor(request: schemas.AddDoctor, db: Session = Depends(get_db)):
     doctor = models.Doctor(**request.model_dump())
     db.add(doctor)
