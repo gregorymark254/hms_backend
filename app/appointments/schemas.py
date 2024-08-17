@@ -12,6 +12,8 @@ class AddAppointment(BaseModel):
 
 class AppointmentSchema(AddAppointment):
     appointmentId: int
+    patient_name: str
+    doctor_name: str
     status: str
     createdAt: datetime
 

@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from sqlalchemy import Column, Integer, String, Date, DateTime, func
+from sqlalchemy.orm import relationship
 
 from app.utils.database import Base
 
@@ -19,3 +20,6 @@ class Patient(Base):
     insuranceNumber = Column(String(20), nullable=False)
     insuranceName = Column(String(50), nullable=False)
     createdAt = Column(DateTime, nullable=False, default=datetime.utcnow())
+
+    appointments = relationship('Appointment', back_populates='patient', lazy='dynamic')
+    medications = relationship('Medication', back_populates='patient', lazy='dynamic')

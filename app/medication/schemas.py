@@ -13,6 +13,8 @@ class AddMedication(BaseModel):
 
 class Medication(AddMedication):
     medicationId: int
+    patient_name: str
+    prescriptionName: str
     createdAt: datetime
 
 
