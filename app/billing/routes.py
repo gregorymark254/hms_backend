@@ -1,5 +1,5 @@
 from fastapi import Depends
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from . import router, schemas, models
 from ..users.models import get_current_user
@@ -9,14 +9,15 @@ from ..utils.pagination import Pagination, Paginator
 
 @router.get('/', response_model=schemas.ListBilling, dependencies=[Depends(get_current_user)])
 def get_billing(db: Session = Depends(get_db), pagination: Paginator = Depends(), patientId: int | None = None):
-    query = db.query(models.Billing)
+    query = db.query(models.Billing).options(joinedload(models.Billing.patient))
     if patientId:
         query = query.filter_by(patientId=patientId)
     total = query.count()
-    billing = query.offset(pagination.offset).limit(pagination.limit).all()
-    count = len(billing)
+    billings = query.offset(pagination.offset).limit(pagination.limit).all()
+    count = len(billings)
 
-    return Pagination(items=billing, total=total, count=count)
+    formatted_results = [billing.to_json() for billing in billings]
+    return Pagination(items=formatted_results, total=total, count=count)
 
 
 @router.post('/', response_model=schemas.BillingSchema, dependencies=[Depends(get_current_user)])

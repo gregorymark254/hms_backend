@@ -20,4 +20,18 @@ class Billing(Base):
     patientId = Column(Integer, ForeignKey('patients.patientId'), nullable=False, index=True)
     createdAt = Column(DateTime, nullable=False, default=datetime.utcnow())
 
-    payment = relationship('Payment', back_populates='billings')
+    payment = relationship('Payment', back_populates='billings', lazy='joined')
+    patient = relationship('Patient', back_populates='billings', lazy='joined')
+
+    def to_json(self):
+        patient_name = self.patient.firstName + " " + self.patient.lastName if self.patient else None
+
+        return {
+            'billingId': self.billingId,
+            'amount': self.amount,
+            'billingDate': self.billingDate,
+            'status': self.status,
+            'patientId': self.patientId,
+            'patient_name': patient_name,
+            'createdAt': self.createdAt,
+        }

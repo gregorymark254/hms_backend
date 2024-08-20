@@ -21,5 +21,6 @@ class Patient(Base):
     insuranceName = Column(String(50), nullable=False)
     createdAt = Column(DateTime, nullable=False, default=datetime.utcnow())
 
-    appointments = relationship('Appointment', back_populates='patient', lazy='dynamic')
-    medications = relationship('Medication', back_populates='patient', lazy='dynamic')
+    appointments = relationship('Appointment', back_populates='patient', lazy='joined')
+    medications = relationship('Medication', back_populates='patient', lazy='joined')
+    billings = relationship('Billing', back_populates='patient', lazy='joined')
