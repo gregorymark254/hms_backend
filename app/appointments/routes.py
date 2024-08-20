@@ -1,4 +1,4 @@
-from fastapi import Depends
+from fastapi import Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
 
 from . import router, schemas, models
@@ -30,3 +30,29 @@ async def add_appointment(request: schemas.AddAppointment, db: Session = Depends
     db.commit()
     db.refresh(new_appointment)
     return new_appointment
+
+
+@router.put('/{patientId}/approve',  dependencies=[Depends(get_current_user)])
+async def approve_appointment(patientId: int, db: Session = Depends(get_db)):
+    appointment = db.query(models.Appointment).filter_by(patientId=patientId).first()
+
+    if appointment is None:
+        raise HTTPException(status_code=404, detail="Appointment not found")
+
+    appointment.status = 'confirmed'
+    db.commit()
+    db.refresh(appointment)
+    return {'message': 'Appointment has been approved'}
+
+
+@router.put('/{patientId}/cancel',  dependencies=[Depends(get_current_user)])
+async def cancel_appointment(patientId: int, db: Session = Depends(get_db)):
+    appointments = db.query(models.Appointment).filter_by(patientId=patientId).first()
+
+    if appointments is None:
+        raise HTTPException(status_code=404, detail="Appointment not found")
+
+    appointments.status = 'canceled'
+    db.commit()
+    db.refresh(appointments)
+    return {'message': 'Appointment has been canceled'}

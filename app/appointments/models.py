@@ -7,9 +7,10 @@ from sqlalchemy.orm import relationship
 from app.utils.database import Base
 
 
-class AppointmentEnum(enum.Enum):
+class AppointmentEnums(enum.Enum):
     pending = "pending"
     confirmed = "confirmed"
+    canceled = "canceled"
 
 
 class Appointment(Base):
@@ -17,7 +18,7 @@ class Appointment(Base):
     appointmentId = Column(Integer, primary_key=True, autoincrement=True)
     appointmentDate = Column(Date, nullable=False)
     reason = Column(Text, nullable=False)
-    status = Column(Enum(AppointmentEnum), default=AppointmentEnum.pending)
+    status = Column(Enum(AppointmentEnums), default=AppointmentEnums.pending, nullable=False)
     patientId = Column(Integer, ForeignKey('patients.patientId'), nullable=False, index=True)
     doctorId = Column(Integer, ForeignKey('doctors.doctorId'), nullable=False, index=True)
     createdAt = Column(DateTime, nullable=False, default=datetime.utcnow())

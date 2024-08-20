@@ -16,7 +16,7 @@ class Billing(Base):
     billingId = Column(Integer, primary_key=True, autoincrement=True)
     amount = Column(Integer, nullable=False)
     billingDate = Column(Date, nullable=False)
-    status = Column(Enum(BillingEnum), default=BillingEnum.pending)
+    status = Column(Enum(BillingEnum), default=BillingEnum.pending, nullable=False)
     patientId = Column(Integer, ForeignKey('patients.patientId'), nullable=False, index=True)
     createdAt = Column(DateTime, nullable=False, default=datetime.utcnow())
 
