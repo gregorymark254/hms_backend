@@ -16,6 +16,12 @@ class BillingSchema(AddBilling):
     createdAt: datetime
 
 
+class PayBill(BaseModel):
+    amount: int
+    patientId: int
+    billingId: int
+
+
 class ListBilling(BaseModel):
     items: list[BillingSchema]
     total: int

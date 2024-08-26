@@ -45,6 +45,3 @@ class ListUsers(BaseModel):
 class UserOut(BaseModel):
     userId: int
     createdAt: datetime
-
-    class Config:
-        orm_mode = True

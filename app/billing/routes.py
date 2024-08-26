@@ -1,4 +1,5 @@
-from fastapi import Depends
+from dns.e164 import query
+from fastapi import Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
 
 from . import router, schemas, models
@@ -8,7 +9,7 @@ from ..utils.pagination import Pagination, Paginator
 
 
 @router.get('/', response_model=schemas.ListBilling, dependencies=[Depends(get_current_user)])
-def get_billing(db: Session = Depends(get_db), pagination: Paginator = Depends(), patientId: int | None = None):
+async def get_billing(db: Session = Depends(get_db), pagination: Paginator = Depends(), patientId: int | None = None):
     query = db.query(models.Billing).options(joinedload(models.Billing.patient))
     if patientId:
         query = query.filter_by(patientId=patientId)
@@ -21,9 +22,19 @@ def get_billing(db: Session = Depends(get_db), pagination: Paginator = Depends()
 
 
 @router.post('/', response_model=schemas.BillingSchema, dependencies=[Depends(get_current_user)])
-def create_billing(request: schemas.AddBilling, db: Session = Depends(get_db)):
+async def create_billing(request: schemas.AddBilling, db: Session = Depends(get_db)):
     billing = models.Billing(**request.model_dump())
     db.add(billing)
     db.commit()
     db.refresh(billing)
     return billing
+
+
+@router.get('/{billingId}', response_model=schemas.PayBill, dependencies=[Depends(get_current_user)])
+async def get_billing_by_id(billingId: int, db: Session = Depends(get_db)):
+    bill = db.query(models.Billing).filter_by(billingId=billingId).first()
+
+    if not bill:
+        raise HTTPException(status_code=404, detail='Billing not found')
+    else:
+        return bill
