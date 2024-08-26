@@ -27,7 +27,7 @@ async def create_billing(request: schemas.AddBilling, db: Session = Depends(get_
     db.add(billing)
     db.commit()
     db.refresh(billing)
-    return billing
+    return {'message': f'Billing {billing.billingId} has been added.'}
 
 
 @router.get('/{billingId}', response_model=schemas.PayBill, dependencies=[Depends(get_current_user)])

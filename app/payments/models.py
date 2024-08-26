@@ -13,7 +13,7 @@ class PaymentEnum(enum.Enum):
 class Payment(Base):
     __tablename__ = 'payments'
     paymentId = Column(Integer, primary_key=True, autoincrement=True)
-    transactionId = Column(String(10), nullable=True, unique=True, index=True)
+    transactionId = Column(String(10), nullable=False, unique=True, index=True)
     amount = Column(Integer, nullable=False)
     paymentMethod = Column(Enum(PaymentEnum), nullable=False)
     paymentDate = Column(DateTime, nullable=False, default=datetime.utcnow())

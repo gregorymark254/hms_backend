@@ -4,6 +4,7 @@ from pydantic import BaseModel
 
 
 class AddPayment(BaseModel):
+    transactionId: str
     amount: int
     paymentMethod: str
     patientId: int
@@ -12,6 +13,7 @@ class AddPayment(BaseModel):
 
 class PaymentSchema(AddPayment):
     paymentId: int
+    paymentDate: datetime
     createdAt: datetime
 
 
