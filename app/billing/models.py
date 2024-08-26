@@ -33,5 +33,6 @@ class Billing(Base):
             'status': self.status,
             'patientId': self.patientId,
             'patient_name': patient_name,
+            'phoneNumber': self.patient.phoneNumber,
             'createdAt': self.createdAt,
         }

@@ -4,10 +4,8 @@ from pydantic import BaseModel
 
 
 class AddPayment(BaseModel):
-    transactionId: str
     amount: int
     paymentMethod: str
-    paymentDate: datetime
     patientId: int
     billingId: int
 

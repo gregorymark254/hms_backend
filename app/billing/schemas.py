@@ -12,6 +12,7 @@ class AddBilling(BaseModel):
 class BillingSchema(AddBilling):
     billingId: int
     patient_name: str
+    phoneNumber: str
     status: str
     createdAt: datetime
 

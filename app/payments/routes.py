@@ -1,11 +1,11 @@
-from fastapi import Depends
+from fastapi import Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from . import router, schemas, models
 from ..users.models import get_current_user
 from ..utils.database import get_db
 from ..utils.pagination import Pagination, Paginator
-
+from ..billing import models as billing_models
 
 @router.get('/', response_model=schemas.ListPayment, dependencies=[Depends(get_current_user)])
 def get_payments(db: Session = Depends(get_db), pagination: Paginator = Depends()):
@@ -20,6 +20,13 @@ def get_payments(db: Session = Depends(get_db), pagination: Paginator = Depends(
 async def add_payment(request: schemas.AddPayment, db: Session = Depends(get_db)):
     payment = models.Payment(**request.model_dump())
     db.add(payment)
+
+    billing = db.query(billing_models.Billing).filter(billing_models.Billing.billingId == request.billingId).first()
+    if billing is None:
+        raise HTTPException(status_code=404, detail='Billing not found')
+
+    billing.status = 'paid'
+
     db.commit()
     db.refresh(payment)
     return payment

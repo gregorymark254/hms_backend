@@ -16,7 +16,7 @@ class Payment(Base):
     transactionId = Column(String(10), nullable=True, unique=True, index=True)
     amount = Column(Integer, nullable=False)
     paymentMethod = Column(Enum(PaymentEnum), nullable=False)
-    paymentDate = Column(DateTime, nullable=False)
+    paymentDate = Column(DateTime, nullable=False, default=datetime.utcnow())
     patientId = Column(Integer, ForeignKey('patients.patientId'), nullable=False, index=True)
     billingId = Column(Integer, ForeignKey('billing.billingId'), nullable=False, index=True)
     createdAt = Column(DateTime, default=datetime.utcnow())

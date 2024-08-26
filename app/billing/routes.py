@@ -21,7 +21,7 @@ async def get_billing(db: Session = Depends(get_db), pagination: Paginator = Dep
     return Pagination(items=formatted_results, total=total, count=count)
 
 
-@router.post('/', response_model=schemas.BillingSchema, dependencies=[Depends(get_current_user)])
+@router.post('/', dependencies=[Depends(get_current_user)])
 async def create_billing(request: schemas.AddBilling, db: Session = Depends(get_db)):
     billing = models.Billing(**request.model_dump())
     db.add(billing)
