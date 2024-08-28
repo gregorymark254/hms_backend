@@ -15,21 +15,21 @@ MPESA_CONSUMER_KEY = os.getenv('MPESA_CONSUMER_KEY')
 MPESA_CONSUMER_SECRET = os.getenv('MPESA_CONSUMER_SECRET')
 MPESA_PASS_KEY = os.getenv('MPESA_PASS_KEY')
 MPESA_SHORTCODE = os.getenv('MPESA_SHORTCODE')
+CALLBACK_URL = os.getenv('CALLBACK_URL')
 
 
 class Mpesa:
-    consumer_key = None
-    consumer_secret = None
-    basic_token = None
-    access_token = None
-    access_token_expiry = None
-    access_token_generated_at = None
 
     def __init__(self):
         self.consumer_key = MPESA_CONSUMER_KEY
         self.consumer_secret = MPESA_CONSUMER_SECRET
         self.mpesa_shortcode = MPESA_SHORTCODE
         self.mpesa_passkey = MPESA_PASS_KEY
+        self.callback_url = CALLBACK_URL
+        self.basic_token = None
+        self.access_token = None
+        self.access_token_expiry = None
+        self.access_token_generated_at = None
 
 
     def get_basic_token(self):
@@ -44,14 +44,14 @@ class Mpesa:
 
     def get_access_token(self):
         basic_token = self.basic_token or self.get_basic_token()
-        print('-----Generating access token-----')
+        print('------Generating access token------')
         response = requests.get(ACCESS_TOKEN_URL, headers={'Authorization': f'Basic {basic_token}'})
-        print('-----Token Status Code-----')
-        print(response.status_code)
+        print('Token Status Code:', response.status_code)
 
         if response.status_code != 200:
             print('-----Unable to generate access token-----')
             print('Status Code:', response.status_code)
+            raise Exception('Unable to generate access token')
         else:
             token = response.json()
             self.access_token = token['access_token']
@@ -61,23 +61,20 @@ class Mpesa:
 
 
     def validate_access_token(self):
-        valid = False
-        if self.access_token and self.access_token_expiry:
-            now = datetime.now()
-            valid = self.access_token_generated_at + timedelta(seconds=(self.access_token_expiry - 10)) > now
-
-        return valid
+        if not self.access_token or not self.access_token_expiry:
+            return False
+        now = datetime.now()
+        return self.access_token_generated_at + timedelta(seconds=(self.access_token_expiry - 10)) > now
 
 
     def stk_password_timestamp(self):
-        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+            to_encode = f'{self.mpesa_shortcode}{self.mpesa_passkey}{timestamp}'
+            password = base64.b64encode(to_encode.encode('utf-8')).decode('utf-8')
+            return password, timestamp
 
-        to_encode = f'{self.mpesa_shortcode}{self.mpesa_passkey}{timestamp}'
-        password = base64.b64encode(to_encode.encode('utf-8')).decode('utf-8')
 
-        return password, timestamp
-
-    def stk_push(self,phone = None, amount = None, callback_url = None):
+    def stk_push(self, phone = int, amount = int):
         password, timestamp = self.stk_password_timestamp()
 
         stk_payload = {
@@ -88,12 +85,11 @@ class Mpesa:
             "PartyA": phone,
             "PartyB": self.mpesa_shortcode,
             "PhoneNumber": phone,
-            "CallBackURL": callback_url,
+            "CallBackURL": self.callback_url,
             "TransactionType": "CustomerPayBillOnline",
             "AccountReference": "Medix Solutions",
             "TransactionDesc": "Medix Solutions"
         }
-
 
         return stk_payload
 
@@ -107,5 +103,6 @@ class Mpesa:
 
         response = requests.post(STK_PUSH_URL, data=json.dumps(payload), headers=headers)
         print('Stk status code:', response.status_code)
+        print('--------End---------')
 
         return response

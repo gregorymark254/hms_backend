@@ -17,6 +17,10 @@ class PaymentSchema(AddPayment):
     createdAt: datetime
 
 
+class StkPush(BaseModel):
+    amount: int
+    phone: int
+
 class ListPayment(BaseModel):
     items: list[PaymentSchema]
     total: int
