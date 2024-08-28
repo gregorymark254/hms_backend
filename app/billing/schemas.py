@@ -1,11 +1,11 @@
-from datetime import datetime
+from datetime import datetime, date
 
 from pydantic import BaseModel
 
 
 class AddBilling(BaseModel):
     amount: int
-    billingDate: datetime
+    billingDate: date
     patientId: int
 
 
