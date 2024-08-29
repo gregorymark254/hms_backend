@@ -101,16 +101,10 @@ async def process_response(request: Request, db: Session = Depends(get_db)):
     merchant_response_id = stk_callback['MerchantRequestID']
     result_code = stk_callback['ResultCode']
 
-    mpesa = stk_callback['CallbackMetadata']
-    mpesadate = stk_callback['CallbackMetadata']['Item'][2]['Value']
-    print('##### mpesa data #####', mpesa)
-    print('##### mpesa date-time #####', mpesadate)
-
     mpesa_ref = stk_callback['CallbackMetadata']['Item'][1]['Value'] # mpesa transaction code
     mpesa_amount = stk_callback['CallbackMetadata']['Item'][0]['Value'] # mpesa transaction amount
-    mpesa_number = stk_callback['CallbackMetadata']['Item'][3]['Value'] # mpesa transaction phone number
-    mpesa_date = stk_callback['CallbackMetadata']['Item'][2]['Value'] # mpesa transaction date time
-    print('mpesa date',mpesa_date)
+    mpesa_number = stk_callback['CallbackMetadata']['Item'][4]['Value'] # mpesa transaction phone number
+    mpesa_date = stk_callback['CallbackMetadata']['Item'][3]['Value'] # mpesa transaction date time
 
     # Convert transaction date to datetime
     transaction_date = None
