@@ -1,7 +1,10 @@
+from datetime import datetime
+
 from fastapi import Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from . import router, schemas, models
+from .models import PaymentEnum
 from .mpesa import Mpesa
 from ..users.models import get_current_user
 from ..utils.database import get_db
@@ -42,11 +45,48 @@ async def send_stk_push(request: schemas.StkPush):
     return response.json()
 
 
-@router.post('/stk_callback')
-async def send_stk_callback(request: Request):
-    callback = await request.json()
-    print('------Received Callback--------')
-    print(callback)
-    print('-------End of callback-------')
 
-    return {'status': 'ok'}
+@router.post("/stk_callback")
+async def process_response(request: Request, db: Session = Depends(get_db)):
+    try:
+        json_response = await request.json()
+        stk_callback = json_response['Body']['stkCallback']
+
+        merchant_response_id = stk_callback['CheckoutRequestID']
+        result_code = stk_callback['ResultCode']
+        mpesa_ref = stk_callback['CallbackMetadata']['Item'][1]['Value']
+
+        # Find the corresponding transaction
+        transaction = db.query(models.Transaction).filter(models.Transaction.merchant_req_id == merchant_response_id).first()
+
+        if transaction:
+            if result_code == 0:
+                # Update the transaction status
+                transaction.status = "Completed"
+                transaction.mpesa_ref = mpesa_ref
+                transaction.updated_at = datetime.now()
+
+                # Create a corresponding payment record
+                related_payment = models.Payment(
+                    transactionId=merchant_response_id,
+                    amount=transaction.amount,
+                    paymentMethod=models.PaymentEnum.mpesa,
+                    patientId=transaction.patientId,
+                    billingId=transaction.billingId,
+                    status="Completed",
+                    mpesaRef=mpesa_ref
+                )
+                db.add(related_payment)
+                db.commit()
+
+                return {"message": "Payment processed"}
+            else:
+                return {"message": "Transaction failed", "result_code": result_code}
+        else:
+            raise HTTPException(status_code=404, detail="Transaction not found")
+    except Exception as e:
+        db.rollback()
+        print(f"Error processing response: {e}")
+        raise HTTPException(status_code=500, detail="Internal Server Error")
+    finally:
+        db.close()

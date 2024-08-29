@@ -103,6 +103,6 @@ class Mpesa:
 
         response = requests.post(STK_PUSH_URL, data=json.dumps(payload), headers=headers)
         print('Stk status code:', response.status_code)
-        print('--------End---------')
+        print('--------STK PUSH SENT---------')
 
         return response
