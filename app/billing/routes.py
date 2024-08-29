@@ -37,4 +37,4 @@ async def get_billing_by_id(billingId: int, db: Session = Depends(get_db)):
     if not bill:
         raise HTTPException(status_code=404, detail='Billing not found')
     else:
-        return bill
+        return bill.to_json()

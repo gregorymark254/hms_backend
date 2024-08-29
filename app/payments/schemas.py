@@ -20,6 +20,7 @@ class MpesaPayment(BaseModel):
 
 class PaymentSchema(AddPayment):
     paymentId: int
+    status: str
     paymentDate: datetime
     createdAt: datetime
 

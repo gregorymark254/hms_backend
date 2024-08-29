@@ -10,8 +10,18 @@ class PaymentEnum(enum.Enum):
     cash = 'cash'
     mpesa = 'mpesa'
 
+class PaymentStatusEnum(enum.Enum):
+    Completed = 'Completed'
+    Pending = 'Pending'
+
+class TransactionStatusEnum(enum.Enum):
+    Completed = 'Completed'
+    Pending = 'Pending'
+
+
 class Payment(Base):
     __tablename__ = 'payments'
+
     paymentId = Column(Integer, primary_key=True, autoincrement=True)
     transactionId = Column(String(100), unique=True, index=True)
     amount = Column(Integer, nullable=False)
@@ -21,7 +31,7 @@ class Payment(Base):
     patientId = Column(Integer, ForeignKey('patients.patientId'), nullable=False, index=True)
     billingId = Column(Integer, ForeignKey('billing.billingId'), nullable=False, index=True)
     createdAt = Column(DateTime, default=datetime.utcnow())
-    status = Column(String(50), nullable=False)
+    status = Column(Enum(PaymentStatusEnum), nullable=False, default=PaymentStatusEnum.Completed)
 
     billings = relationship("Billing", back_populates="payment")
 
@@ -32,7 +42,7 @@ class Transaction(Base):
     merchant_req_id = Column(String(100), primary_key=True, index=True)
     phoneNumber = Column(String(20), nullable=False)
     amount = Column(Integer, nullable=False)
-    status = Column(String(20))
+    status = Column(Enum(TransactionStatusEnum), nullable=False)
     billingId = Column(Integer, nullable=False, index=True)
     patientId = Column(Integer, nullable=False, index=True)
     created_at = Column(DateTime, default=datetime.now())

@@ -131,7 +131,7 @@ async def process_response(request: Request, db: Session = Depends(get_db)):
                 paymentDate=transaction_date,
                 patientId=transaction.patientId,
                 billingId=transaction.billingId,
-                status="Completed",
+                status=models.PaymentStatusEnum.Completed,
             )
             db.add(save_payment)
             db.commit()

@@ -19,6 +19,7 @@ class BillingSchema(AddBilling):
 
 class PayBill(BaseModel):
     amount: int
+    phoneNumber: str
     patientId: int
     billingId: int
 
