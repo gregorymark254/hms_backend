@@ -110,7 +110,7 @@ async def process_response(request: Request, db: Session = Depends(get_db)):
     transaction_date = None
     if mpesa_date:
         try:
-            transaction_date = datetime.strptime(mpesa_date, '%Y%m%d%H%M%S')
+            transaction_date = datetime.strptime(str(mpesa_date), '%Y%m%d%H%M%S')
         except ValueError:
             raise HTTPException(status_code=400, detail='Invalid transaction date format')
 
