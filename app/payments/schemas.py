@@ -7,9 +7,16 @@ class AddPayment(BaseModel):
     transactionId: str
     amount: int
     paymentMethod: str
+    phoneNumber: str
     patientId: int
     billingId: int
 
+class MpesaPayment(BaseModel):
+    amount: int
+    paymentMethod: str
+    phoneNumber: str
+    patientId: int
+    billingId: int
 
 class PaymentSchema(AddPayment):
     paymentId: int

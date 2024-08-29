@@ -36,12 +36,58 @@ async def add_payment(request: schemas.AddPayment, db: Session = Depends(get_db)
     return payment
 
 
-@router.post('/stk_push')
-async def send_stk_push(request: schemas.StkPush):
+@router.post('/mpesa', dependencies=[Depends(get_current_user)])
+async def mpesa_pay(request: schemas.MpesaPayment, db: Session = Depends(get_db)):
+    amount = request.amount
+    phone_number = request.phoneNumber
+    billing_id = request.billingId
+    patient_id = request.patientId
+
+    # Find the billing record
+    billing = db.query(billing_models.Billing).filter(billing_models.Billing.billingId == billing_id).first()
+    if not billing:
+        raise HTTPException(status_code=404, detail='Billing record not found')
+
+    # Verify the amount matches
+    if billing.amount != amount:
+        raise HTTPException(status_code=400, detail='Amount does not match billing amount')
+
+    # send stk push and get merchant request id
     mpesa = Mpesa()
-    payload = mpesa.stk_push(phone=request.phone, amount=request.amount)
+    payload = mpesa.stk_push(phone=request.phoneNumber, amount=request.amount)
     response = mpesa.send_stk_push(payload)
 
+
+    json_response = response.json()
+    try:
+        merchant_response_id = json_response['MerchantRequestID']
+    except KeyError as e:
+        raise HTTPException(status_code=500, detail=f"Unexpected response format: {e}")
+
+    # Check if a transaction with the same billingId already exists
+    existing_transaction = db.query(models.Transaction).filter_by(billingId=billing_id).first()
+
+    if existing_transaction:
+        # Update the existing transaction
+        existing_transaction.phoneNumber = phone_number
+        existing_transaction.amount = amount
+        existing_transaction.status = "Pending"
+        existing_transaction.patientId = patient_id
+        existing_transaction.merchant_req_id = merchant_response_id
+    else:
+        # Create a new transaction record
+        transaction = models.Transaction(
+            merchant_req_id=merchant_response_id,
+            phoneNumber=phone_number,
+            amount=amount,
+            status="Pending",
+            billingId=billing_id,
+            patientId=patient_id
+        )
+        db.add(transaction)
+    db.commit()
+
+    print("------Payment initiated successfully------")
     return response.json()
 
 
@@ -50,11 +96,24 @@ async def send_stk_push(request: schemas.StkPush):
 async def process_response(request: Request, db: Session = Depends(get_db)):
     try:
         json_response = await request.json()
-        stk_callback = json_response['Body']['stkCallback']
+        print("Raw callback response:", json_response)
 
-        merchant_response_id = stk_callback['CheckoutRequestID']
+        stk_callback = json_response['Body']['stkCallback']
+        merchant_response_id = stk_callback['MerchantRequestID']
         result_code = stk_callback['ResultCode']
-        mpesa_ref = stk_callback['CallbackMetadata']['Item'][1]['Value']
+
+        mpesa_ref = stk_callback['CallbackMetadata']['Item'][1]['Value'] # mpesa transaction code
+        mpesa_amount = stk_callback['CallbackMetadata']['Item'][0]['Value'] # mpesa transaction amount
+        mpesa_number = stk_callback['CallbackMetadata']['Item'][3]['Value'] # mpesa transaction phone number
+        mpesa_date = stk_callback['CallbackMetadata']['Item'][2]['Value'] # mpesa transaction date time
+
+        # Convert transaction date to datetime
+        transaction_date = None
+        if mpesa_date:
+            try:
+                transaction_date = datetime.strptime(mpesa_date, '%Y%m%d%H%M%S')
+            except ValueError:
+                raise HTTPException(status_code=400, detail='Invalid transaction date format')
 
         # Find the corresponding transaction
         transaction = db.query(models.Transaction).filter(models.Transaction.merchant_req_id == merchant_response_id).first()
@@ -63,27 +122,35 @@ async def process_response(request: Request, db: Session = Depends(get_db)):
             if result_code == 0:
                 # Update the transaction status
                 transaction.status = "Completed"
-                transaction.mpesa_ref = mpesa_ref
-                transaction.updated_at = datetime.now()
 
-                # Create a corresponding payment record
-                related_payment = models.Payment(
-                    transactionId=merchant_response_id,
-                    amount=transaction.amount,
+                # Save the corresponding payment record
+                save_payment = models.Payment(
+                    transactionId=mpesa_ref,
+                    amount=mpesa_amount,
                     paymentMethod=models.PaymentEnum.mpesa,
+                    phoneNumber=mpesa_number,
+                    paymentDate=transaction_date,
                     patientId=transaction.patientId,
                     billingId=transaction.billingId,
                     status="Completed",
-                    mpesaRef=mpesa_ref
                 )
-                db.add(related_payment)
+                db.add(save_payment)
                 db.commit()
 
-                return {"message": "Payment processed"}
+                # Update the related billing status
+                billing = db.query(billing_models.Billing).filter(
+                    billing_models.Billing.billingId == transaction.billingId).first()
+                if billing:
+                    billing.status = billing_models.BillingEnum.paid
+                    db.commit()
+
+                return {"message": "Payment processed successfully"}
             else:
                 return {"message": "Transaction failed", "result_code": result_code}
         else:
             raise HTTPException(status_code=404, detail="Transaction not found")
+
+
     except Exception as e:
         db.rollback()
         print(f"Error processing response: {e}")
