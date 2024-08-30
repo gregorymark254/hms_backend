@@ -29,6 +29,23 @@ class StkPush(BaseModel):
     amount: int
     phone: int
 
+class TransactionStatus(BaseModel):
+    merchant_req_id: str
+    checkout_req_id: str
+    response_code: int
+    response_description: str
+    customer_message: str
+    phoneNumber: str
+    amount: int
+    status: str
+    billingId: int
+    patientId: int
+
+class ListTransactions(BaseModel):
+    items: list[TransactionStatus]
+    total: int
+    count: int
+
 class ListPayment(BaseModel):
     items: list[PaymentSchema]
     total: int

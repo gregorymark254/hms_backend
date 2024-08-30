@@ -106,3 +106,43 @@ class Mpesa:
         print('--------STK PUSH SENT---------')
 
         return response
+
+    '''
+        CHECKING FOR MPESA STATUS WHEN CALLBACK URL IS NOT CALLED A
+    '''
+
+    def check_payment_status_timestamp(self):
+        timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+        to_encode = f'{self.mpesa_shortcode}{self.mpesa_passkey}{timestamp}'
+        password = base64.b64encode(to_encode.encode('utf-8')).decode('utf-8')
+        return password, timestamp
+
+
+    def payment_status(self, checkout_request_id: str):
+        password, timestamp = self.check_payment_status_timestamp()
+
+        payload = {
+            'BusinessShortCode': self.mpesa_shortcode,
+            'Password': password,
+            'Timestamp': timestamp,
+            'CheckoutRequestID': checkout_request_id
+        }
+
+        return payload
+
+
+    def check_payment_status(self, payload):
+        print('------Checking payment status------')
+        access_token = self.access_token if self.validate_access_token() else self.get_access_token()
+
+        headers = {
+            'Authorization': f'Bearer {access_token}',
+            'Content-Type': 'application/json'
+        }
+
+        response = requests.post(STK_QUERY_URL, data=json.dumps(payload), headers=headers)
+        print('Payment result code:', response.json().get('ResultCode'))
+        print('--------Received payment status--------')
+
+        return response
+

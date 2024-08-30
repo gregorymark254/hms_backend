@@ -4,7 +4,6 @@ from fastapi import Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from . import router, schemas, models
-from .models import PaymentEnum
 from .mpesa import Mpesa
 from ..users.models import get_current_user
 from ..utils.database import get_db
@@ -57,10 +56,14 @@ async def mpesa_pay(request: schemas.MpesaPayment, db: Session = Depends(get_db)
     payload = mpesa.stk_push(phone=request.phoneNumber, amount=request.amount)
     response = mpesa.send_stk_push(payload)
 
-
+    # get response from stk push
     json_response = response.json()
     try:
         merchant_response_id = json_response['MerchantRequestID']
+        checkout_req_id = json_response['CheckoutRequestID']
+        response_code = json_response['ResponseCode']
+        response_description = json_response['ResponseDescription']
+        customer_message = json_response['CustomerMessage']
     except KeyError as e:
         raise HTTPException(status_code=500, detail=f"Unexpected response format: {e}")
 
@@ -69,15 +72,24 @@ async def mpesa_pay(request: schemas.MpesaPayment, db: Session = Depends(get_db)
 
     if existing_transaction:
         # Update the existing transaction
+        existing_transaction.merchant_req_id = merchant_response_id
+        existing_transaction.checkout_req_id = checkout_req_id
+        existing_transaction.response_code = response_code
+        existing_transaction.response_description = response_description
+        existing_transaction.customer_message = customer_message
         existing_transaction.phoneNumber = phone_number
         existing_transaction.amount = amount
         existing_transaction.status = "Pending"
         existing_transaction.patientId = patient_id
-        existing_transaction.merchant_req_id = merchant_response_id
+
     else:
         # Create a new transaction record
         transaction = models.Transaction(
             merchant_req_id=merchant_response_id,
+            checkout_req_id=checkout_req_id,
+            response_code=response_code,
+            response_description=response_description,
+            customer_message=customer_message,
             phoneNumber=phone_number,
             amount=amount,
             status="Pending",
@@ -148,3 +160,13 @@ async def process_response(request: Request, db: Session = Depends(get_db)):
             return {"message": "Transaction failed", "result_code": result_code}
     else:
         raise HTTPException(status_code=404, detail="Transaction not found")
+
+
+
+@router.get('/transaction_status', response_model=schemas.ListTransactions, dependencies=[Depends(get_current_user)])
+async def get_transaction_status(db: Session = Depends(get_db), pagination: Paginator = Depends()):
+    query = db.query(models.Transaction)
+    total = query.count()
+    transaction_status = query.offset(pagination.offset).limit(pagination.limit).all()
+    count = len(transaction_status)
+    return Pagination(items=transaction_status, total=total, count=count)

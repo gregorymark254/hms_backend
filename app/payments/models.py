@@ -40,10 +40,14 @@ class Transaction(Base):
     __tablename__ = 'transactions'
 
     merchant_req_id = Column(String(100), primary_key=True, index=True)
+    checkout_req_id = Column(String(100), unique=True, index=True)
+    response_code = Column(String(10), nullable=False)
+    response_description = Column(String(255), nullable=False)
+    customer_message = Column(String(255), nullable=False)
     phoneNumber = Column(String(20), nullable=False)
     amount = Column(Integer, nullable=False)
     status = Column(Enum(TransactionStatusEnum), nullable=False)
     billingId = Column(Integer, nullable=False, index=True)
     patientId = Column(Integer, nullable=False, index=True)
     created_at = Column(DateTime, default=datetime.now())
-    updated_at = Column(DateTime, default=datetime.now())
+    updated_at = Column(DateTime, default=datetime.now(), onupdate=datetime.now())
