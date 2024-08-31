@@ -1,6 +1,9 @@
 from datetime import datetime
 
-from pydantic import BaseModel
+from fastapi import HTTPException
+from pydantic import BaseModel, field_validator
+
+from app.utils.validation import validate_phone
 
 
 class AddPayment(BaseModel):
@@ -18,6 +21,13 @@ class MpesaPayment(BaseModel):
     patientId: int
     billingId: int
 
+    @field_validator('phoneNumber')
+    def validate_phone(cls, v):
+        valid_number, phoneNumber = validate_phone(v)
+        if not valid_number:
+            raise HTTPException(status_code=400, detail='Invalid phone number')
+        return phoneNumber
+
 class PaymentSchema(AddPayment):
     paymentId: int
     patientName: str
@@ -29,6 +39,13 @@ class PaymentSchema(AddPayment):
 class StkPush(BaseModel):
     amount: int
     phone: int
+
+    @field_validator('phone')
+    def validate_phone(cls, v):
+        valid_number , phone = validate_phone(v)
+        if not valid_number:
+            raise ValueError('Invalid phone number')
+        return phone
 
 class TransactionStatus(BaseModel):
     merchant_req_id: str
