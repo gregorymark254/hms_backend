@@ -219,12 +219,10 @@ async def check_transaction_status(billingId: int, db: Session = Depends(get_db)
         # Update the related billing status if it is pending
         billing = db.query(billing_models.Billing).filter(
             billing_models.Billing.billingId == transaction.billingId).first()
-        if billing.status == 'pending':
+        if billing:
             billing.status = billing_models.BillingEnum.paid
             db.commit()
-        else:
-            pass
 
-        return {"message": "Payment successfully", "ResultDesc": response.get('ResultDesc')}, 200
+        return {"message": "Payment successful", "ResultDesc": response.get('ResultDesc')}, 200
     else:
         raise HTTPException(status_code=400, detail={"message": "Payment failed", "ResultDesc": response.get('ResultDesc')})
