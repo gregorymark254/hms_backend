@@ -4,7 +4,7 @@ import os
 from datetime import datetime, timedelta
 
 import requests
-
+from fastapi import HTTPException
 
 ACCESS_TOKEN_URL = 'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials'
 STK_PUSH_URL = 'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest'
@@ -123,7 +123,7 @@ class Mpesa:
         return password, timestamp
 
     # PAYMENT STATUS PAYLOAD
-    def payment_status(self, checkout_request_id: str):
+    def payment_status(self, checkout_request_id = str):
         password, timestamp = self.check_payment_status_timestamp()
 
         payload = {
@@ -146,9 +146,14 @@ class Mpesa:
             'Content-Type': 'application/json'
         }
 
-        response = requests.post(STK_QUERY_URL, data=json.dumps(payload), headers=headers)
-        print('Payment result code:', response.json().get('ResultCode'))
-        print('--------Received payment status--------')
-
-        return response
+        try:
+            response = requests.post(STK_QUERY_URL, data=json.dumps(payload), headers=headers)
+            response.raise_for_status()  # Raise an error for HTTP codes 4xx/5xx
+            result = response.json()
+            print('Payment result code:', result.get('ResultCode'))
+            print('--------Received payment status--------')
+            return result
+        except requests.RequestException as e:
+            print(f"Request failed: {str(e)}")
+            raise HTTPException(status_code=500, detail="Failed to check payment status")
 

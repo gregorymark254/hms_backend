@@ -41,6 +41,7 @@ class TransactionStatus(BaseModel):
     billingId: int
     patientId: int
 
+
 class ListTransactions(BaseModel):
     items: list[TransactionStatus]
     total: int

@@ -180,3 +180,48 @@ async def get_transaction_status(db: Session = Depends(get_db), pagination: Pagi
     transaction_status = query.offset(pagination.offset).limit(pagination.limit).all()
     count = len(transaction_status)
     return Pagination(items=transaction_status, total=total, count=count)
+
+
+'''
+* POLLING TRANSACTIONS
+* THIS USED WHEN CHECKING IF A PAYMENT IS COMPLETE IF CALLBACK URL IS NOT REACHED AFTER STK PUSH
+'''
+@router.post('/transaction_status/{billingId}', dependencies=[Depends(get_current_user)])
+async def check_transaction_status(billingId: int, db: Session = Depends(get_db)):
+    # Query the database for the transaction using billingId
+    transaction = db.query(models.Transaction).filter(models.Transaction.billingId == billingId).first()
+
+    if not transaction:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+
+    # checkout_request_id from transaction table to send in request body of stk query
+    checkout_request_id = transaction.checkout_req_id
+
+    # Sending stk query to check if transaction was complete or failed
+    mpesa_status = Mpesa()
+    payload = mpesa_status.payment_status(checkout_request_id=checkout_request_id)
+    response = mpesa_status.check_payment_status(payload)
+
+    print('------Response Received------')
+    print(response)
+    result = response.get('ResultCode')
+    print('-------End of response-------')
+
+
+    if int(result) == 0:
+        # Update the transaction status if result code is 0
+        transaction.status = "Completed"
+        db.commit()
+
+        # Update the related billing status if it is pending
+        billing = db.query(billing_models.Billing).filter(
+            billing_models.Billing.billingId == transaction.billingId).first()
+        if billing.status == 'pending':
+            billing.status = billing_models.BillingEnum.paid
+            db.commit()
+        else:
+            pass
+
+        return {"message": "Payment processed successfully"}
+    else:
+        return {"message": "Payment failed", "ResultDesc": response.get('ResultDesc')}
