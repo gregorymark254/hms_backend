@@ -99,6 +99,7 @@ async def mpesa_pay(request: schemas.MpesaPayment, db: Session = Depends(get_db)
         db.add(transaction)
     db.commit()
 
+    print(response.json())
     print("------Payment initiated successfully------")
     return response.json()
 
@@ -106,61 +107,70 @@ async def mpesa_pay(request: schemas.MpesaPayment, db: Session = Depends(get_db)
 
 @router.post("/stk_callback")
 async def process_response(request: Request, db: Session = Depends(get_db)):
-    json_response = await request.json()
-    print("Raw callback response:", json_response)
+    try:
+        print('------Callback received------')
+        json_response = await request.json()
+        print(json_response)
+        print('-------End of callback-------')
 
-    stk_callback = json_response['Body']['stkCallback']
-    merchant_response_id = stk_callback['MerchantRequestID']
-    result_code = stk_callback['ResultCode']
+        stk_callback = json_response['Body']['stkCallback']
+        merchant_response_id = stk_callback['MerchantRequestID']
+        result_code = stk_callback['ResultCode']
 
-    mpesa_ref = stk_callback['CallbackMetadata']['Item'][1]['Value'] # mpesa transaction code
-    mpesa_amount = stk_callback['CallbackMetadata']['Item'][0]['Value'] # mpesa transaction amount
-    mpesa_number = stk_callback['CallbackMetadata']['Item'][4]['Value'] # mpesa transaction phone number
-    mpesa_date = stk_callback['CallbackMetadata']['Item'][3]['Value'] # mpesa transaction date time
+        mpesa_ref = stk_callback['CallbackMetadata']['Item'][1]['Value'] # mpesa transaction code
+        mpesa_amount = stk_callback['CallbackMetadata']['Item'][0]['Value'] # mpesa transaction amount
+        mpesa_number = stk_callback['CallbackMetadata']['Item'][4]['Value'] # mpesa transaction phone number
+        mpesa_date = stk_callback['CallbackMetadata']['Item'][3]['Value'] # mpesa transaction date time
 
-    # Convert transaction date to datetime
-    transaction_date = None
-    if mpesa_date:
-        try:
-            transaction_date = datetime.strptime(str(mpesa_date), '%Y%m%d%H%M%S')
-        except ValueError:
-            raise HTTPException(status_code=400, detail='Invalid transaction date format')
+        # Convert transaction date to datetime
+        transaction_date = None
+        if mpesa_date:
+            try:
+                transaction_date = datetime.strptime(str(mpesa_date), '%Y%m%d%H%M%S')
+            except ValueError:
+                raise HTTPException(status_code=400, detail='Invalid transaction date format')
 
-    # Find the corresponding transaction
-    transaction = db.query(models.Transaction).filter(models.Transaction.merchant_req_id == merchant_response_id).first()
+        # Find the corresponding transaction
+        transaction = db.query(models.Transaction).filter(models.Transaction.merchant_req_id == merchant_response_id).first()
 
-    if transaction:
-        if result_code == 0:
-            # Update the transaction status
-            transaction.status = "Completed"
+        if transaction:
+            if result_code == 0:
+                # Update the transaction status
+                transaction.status = "Completed"
 
-            # Save the corresponding payment record
-            save_payment = models.Payment(
-                transactionId=mpesa_ref,
-                amount=mpesa_amount,
-                paymentMethod=models.PaymentEnum.mpesa,
-                phoneNumber=mpesa_number,
-                paymentDate=transaction_date,
-                patientId=transaction.patientId,
-                billingId=transaction.billingId,
-                status=models.PaymentStatusEnum.Completed,
-            )
-            db.add(save_payment)
-            db.commit()
-
-            # Update the related billing status
-            billing = db.query(billing_models.Billing).filter(
-                billing_models.Billing.billingId == transaction.billingId).first()
-            if billing:
-                billing.status = billing_models.BillingEnum.paid
+                # Save the corresponding payment record
+                save_payment = models.Payment(
+                    transactionId=mpesa_ref,
+                    amount=mpesa_amount,
+                    paymentMethod=models.PaymentEnum.mpesa,
+                    phoneNumber=mpesa_number,
+                    paymentDate=transaction_date,
+                    patientId=transaction.patientId,
+                    billingId=transaction.billingId,
+                    status=models.PaymentStatusEnum.Completed,
+                )
+                db.add(save_payment)
                 db.commit()
 
-            return {"message": "Payment processed successfully"}
-        else:
-            return {"message": "Transaction failed", "result_code": result_code}
-    else:
-        raise HTTPException(status_code=404, detail="Transaction not found")
+                # Update the related billing status
+                billing = db.query(billing_models.Billing).filter(
+                    billing_models.Billing.billingId == transaction.billingId).first()
+                if billing:
+                    billing.status = billing_models.BillingEnum.paid
+                    db.commit()
 
+                return {"message": "Payment processed successfully"}
+            else:
+                return {"message": "Transaction failed", "result_code": result_code}
+        else:
+            raise HTTPException(status_code=404, detail="Transaction not found")
+
+    except Exception as e:
+        db.rollback()
+        print(f"Error processing response: {e}")
+        raise HTTPException(status_code=500, detail="Internal Server Error")
+    finally:
+        db.close()
 
 
 @router.get('/transaction_status', response_model=schemas.ListTransactions, dependencies=[Depends(get_current_user)])

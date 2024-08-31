@@ -19,7 +19,6 @@ CALLBACK_URL = os.getenv('CALLBACK_URL')
 
 
 class Mpesa:
-
     def __init__(self):
         self.consumer_key = MPESA_CONSUMER_KEY
         self.consumer_secret = MPESA_CONSUMER_SECRET
@@ -32,6 +31,7 @@ class Mpesa:
         self.access_token_generated_at = None
 
 
+    # ENCRYPTING THE ACCESS TOKEN
     def get_basic_token(self):
         if self.consumer_secret is None or self.consumer_key is None:
             raise Exception('No consumer_key and consumer_secret found')
@@ -42,6 +42,7 @@ class Mpesa:
         return self.basic_token
 
 
+    # GETTING ACCESS TOKEN FOR AUTHORIZING STK PUSH REQUEST
     def get_access_token(self):
         basic_token = self.basic_token or self.get_basic_token()
         print('------Generating access token------')
@@ -60,6 +61,7 @@ class Mpesa:
             return self.access_token
 
 
+    # VALIDATING THE ACCESS TOKEN IS TRUE AND IS NOT EXPIRED
     def validate_access_token(self):
         if not self.access_token or not self.access_token_expiry:
             return False
@@ -67,6 +69,7 @@ class Mpesa:
         return self.access_token_generated_at + timedelta(seconds=(self.access_token_expiry - 10)) > now
 
 
+    # GENERATING PASSWORD AND TIMESTAMP USED IN STK PAYLOAD
     def stk_password_timestamp(self):
             timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
             to_encode = f'{self.mpesa_shortcode}{self.mpesa_passkey}{timestamp}'
@@ -74,6 +77,7 @@ class Mpesa:
             return password, timestamp
 
 
+    # STK PUSH PAYLOAD
     def stk_push(self, phone = int, amount = int):
         password, timestamp = self.stk_password_timestamp()
 
@@ -85,7 +89,8 @@ class Mpesa:
             "PartyA": phone,
             "PartyB": self.mpesa_shortcode,
             "PhoneNumber": phone,
-            "CallBackURL": self.callback_url,
+            # "CallBackURL": self.callback_url,
+            "CallBackURL": 'https://hms-backend-eane.onrender.com/payments/stk_callback',
             "TransactionType": "CustomerPayBillOnline",
             "AccountReference": "Medix Solutions",
             "TransactionDesc": "Medix Solutions"
@@ -93,6 +98,8 @@ class Mpesa:
 
         return stk_payload
 
+
+    # SENDING STK PUSH TO USER
     def send_stk_push(self, payload):
         print('-----Sending STK Push Request-----')
         access_token = self.access_token if self.validate_access_token() else self.get_access_token()
@@ -107,17 +114,15 @@ class Mpesa:
 
         return response
 
-    '''
-        CHECKING FOR MPESA STATUS WHEN CALLBACK URL IS NOT CALLED A
-    '''
 
+    # CHECKING FOR MPESA PAYMENT STATUS WHEN CALLBACK URL IS NOT CALLED AFTER SENDING STK PUSH
     def check_payment_status_timestamp(self):
         timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
         to_encode = f'{self.mpesa_shortcode}{self.mpesa_passkey}{timestamp}'
         password = base64.b64encode(to_encode.encode('utf-8')).decode('utf-8')
         return password, timestamp
 
-
+    # PAYMENT STATUS PAYLOAD
     def payment_status(self, checkout_request_id: str):
         password, timestamp = self.check_payment_status_timestamp()
 
@@ -131,6 +136,7 @@ class Mpesa:
         return payload
 
 
+    # STK QUERY TO CHECK IF PAYMENT WAS COMPLETED OR NOT
     def check_payment_status(self, payload):
         print('------Checking payment status------')
         access_token = self.access_token if self.validate_access_token() else self.get_access_token()
