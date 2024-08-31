@@ -1,7 +1,8 @@
 from datetime import datetime
 
 from fastapi import Depends, HTTPException, Request
-from sqlalchemy.orm import Session
+from sqlalchemy import desc
+from sqlalchemy.orm import Session, joinedload
 
 from . import router, schemas, models
 from .mpesa import Mpesa
@@ -12,11 +13,13 @@ from ..billing import models as billing_models
 
 @router.get('/', response_model=schemas.ListPayment, dependencies=[Depends(get_current_user)])
 async def get_payments(db: Session = Depends(get_db), pagination: Paginator = Depends()):
-    query = db.query(models.Payment)
+    query = db.query(models.Payment).options(joinedload(models.Payment.patient))
     total = query.count()
-    payments = query.offset(pagination.offset).limit(pagination.limit).all()
+    payments = query.order_by(desc(models.Payment.paymentId)).offset(pagination.offset).limit(pagination.limit).all()
     count = len(payments)
-    return Pagination(items=payments, total=total, count=count)
+
+    formatted_results = [payment.to_json() for payment in payments]
+    return Pagination(items=formatted_results, total=total, count=count)
 
 
 @router.post('/', response_model=schemas.PaymentSchema, dependencies=[Depends(get_current_user)])
@@ -222,6 +225,6 @@ async def check_transaction_status(billingId: int, db: Session = Depends(get_db)
         else:
             pass
 
-        return {"message": "Payment processed successfully"}
+        return {"message": "Payment successfully", "ResultDesc": response.get('ResultDesc')}, 200
     else:
-        return {"message": "Payment failed", "ResultDesc": response.get('ResultDesc')}
+        raise HTTPException(status_code=400, detail={"message": "Payment failed", "ResultDesc": response.get('ResultDesc')})

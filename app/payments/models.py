@@ -33,7 +33,25 @@ class Payment(Base):
     createdAt = Column(DateTime, default=datetime.utcnow())
     status = Column(Enum(PaymentStatusEnum), nullable=False, default=PaymentStatusEnum.Completed)
 
-    billings = relationship("Billing", back_populates="payment")
+    billings = relationship("Billing", back_populates="payment", lazy='joined')
+    patient = relationship("Patient", back_populates="payment", lazy='joined')
+
+    def to_json(self):
+        patient_name = self.patient.firstName + " " + self.patient.lastName if self.patient else None
+
+        return {
+            'paymentId': self.paymentId,
+            'transactionId': self.transactionId,
+            'amount': self.amount,
+            'phoneNumber': self.phoneNumber,
+            'paymentMethod': self.paymentMethod,
+            'paymentDate': self.paymentDate,
+            'patientName': patient_name,
+            'patientId': self.patientId,
+            'billingId': self.billingId,
+            'createdAt': self.createdAt,
+            'status': self.status,
+        }
 
 
 class Transaction(Base):

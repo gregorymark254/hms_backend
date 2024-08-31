@@ -89,8 +89,7 @@ class Mpesa:
             "PartyA": phone,
             "PartyB": self.mpesa_shortcode,
             "PhoneNumber": phone,
-            # "CallBackURL": self.callback_url,
-            "CallBackURL": 'https://hms-backend-eane.onrender.com/payments/stk_callback',
+            "CallBackURL": self.callback_url,
             "TransactionType": "CustomerPayBillOnline",
             "AccountReference": "Medix Solutions",
             "TransactionDesc": "Medix Solutions"
@@ -135,7 +134,6 @@ class Mpesa:
 
         return payload
 
-
     # STK QUERY TO CHECK IF PAYMENT WAS COMPLETED OR NOT
     def check_payment_status(self, payload):
         print('------Checking payment status------')
@@ -148,7 +146,6 @@ class Mpesa:
 
         try:
             response = requests.post(STK_QUERY_URL, data=json.dumps(payload), headers=headers)
-            response.raise_for_status()  # Raise an error for HTTP codes 4xx/5xx
             result = response.json()
             print('Payment result code:', result.get('ResultCode'))
             print('--------Received payment status--------')
@@ -156,4 +153,3 @@ class Mpesa:
         except requests.RequestException as e:
             print(f"Request failed: {str(e)}")
             raise HTTPException(status_code=500, detail="Failed to check payment status")
-

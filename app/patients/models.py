@@ -24,3 +24,4 @@ class Patient(Base):
     appointments = relationship('Appointment', back_populates='patient', lazy='joined')
     medications = relationship('Medication', back_populates='patient', lazy='joined')
     billings = relationship('Billing', back_populates='patient', lazy='joined')
+    payment = relationship('Payment', back_populates='patient', lazy='joined')

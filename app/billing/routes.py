@@ -1,5 +1,6 @@
 from dns.e164 import query
 from fastapi import Depends, HTTPException
+from sqlalchemy import desc
 from sqlalchemy.orm import Session, joinedload
 
 from . import router, schemas, models
@@ -14,7 +15,7 @@ async def get_billing(db: Session = Depends(get_db), pagination: Paginator = Dep
     if patientId:
         query = query.filter_by(patientId=patientId)
     total = query.count()
-    billings = query.offset(pagination.offset).limit(pagination.limit).all()
+    billings = query.order_by(desc(models.Billing.billingId)).offset(pagination.offset).limit(pagination.limit).all()
     count = len(billings)
 
     formatted_results = [billing.to_json() for billing in billings]
