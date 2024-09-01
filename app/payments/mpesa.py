@@ -9,6 +9,7 @@ from fastapi import HTTPException
 ACCESS_TOKEN_URL = 'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials'
 STK_PUSH_URL = 'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest'
 STK_QUERY_URL = 'https://sandbox.safaricom.co.ke/mpesa/stkpushquery/v1/query'
+TRANSACTION_STATUS = 'https://sandbox.safaricom.co.ke/mpesa/transactionstatus/v1/query'
 
 
 MPESA_CONSUMER_KEY = os.getenv('MPESA_CONSUMER_KEY')
@@ -16,6 +17,7 @@ MPESA_CONSUMER_SECRET = os.getenv('MPESA_CONSUMER_SECRET')
 MPESA_PASS_KEY = os.getenv('MPESA_PASS_KEY')
 MPESA_SHORTCODE = os.getenv('MPESA_SHORTCODE')
 CALLBACK_URL = os.getenv('CALLBACK_URL')
+SECURITY_CREDENTIALS = os.getenv('SECURITY_CREDENTIALS')
 
 
 class Mpesa:
@@ -29,6 +31,7 @@ class Mpesa:
         self.access_token = None
         self.access_token_expiry = None
         self.access_token_generated_at = None
+        self.security_credential = SECURITY_CREDENTIALS
 
 
     # ENCRYPTING THE ACCESS TOKEN
@@ -153,3 +156,40 @@ class Mpesa:
         except requests.RequestException as e:
             print(f"Request failed: {str(e)}")
             raise HTTPException(status_code=500, detail="Failed to check payment status")
+
+
+    def transaction_status(self, transaction_id = str):
+        transaction_payload = {
+            "Initiator": "testapi",
+            "SecurityCredential": self.security_credential,
+            "Command ID": "TransactionStatusQuery",
+            "Transaction ID": transaction_id,
+            "PartyA": self.mpesa_shortcode,
+            "IdentifierType": 4,
+            "ResultURL": "http://localhost/:8080/payments/check_transaction_status",
+            "QueueTimeOutURL": "http://localhost/:8080/timeout",
+            "Remarks": "OK",
+            "Occasion": "OK",
+        }
+
+        return transaction_payload
+
+
+    def check_transaction_status(self, transaction_payload):
+        print('------Checking transaction status------')
+
+        access_token = self.access_token if self.validate_access_token() else self.get_access_token()
+        headers = {
+            'Authorization': f'Bearer {access_token}',
+            'Content-Type': 'application/json'
+        }
+
+        try:
+            response = requests.post(TRANSACTION_STATUS, data=json.dumps(transaction_payload), headers=headers)
+            result = response.json()
+            print('Transaction status code:', response.status_code)
+            print('--------Received transaction status--------')
+            return result
+        except requests.RequestException as e:
+            print(f"Request failed: {str(e)}")
+            raise HTTPException(status_code=500, detail="Failed to check transaction status")

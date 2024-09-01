@@ -190,7 +190,7 @@ async def get_transaction_status(db: Session = Depends(get_db), pagination: Pagi
 * THIS USED WHEN CHECKING IF A PAYMENT IS COMPLETE IF CALLBACK URL IS NOT REACHED AFTER STK PUSH
 '''
 @router.post('/transaction_status/{billingId}', dependencies=[Depends(get_current_user)])
-async def check_transaction_status(billingId: int, db: Session = Depends(get_db)):
+async def transaction_status(billingId: int, db: Session = Depends(get_db)):
     # Query the database for the transaction using billingId
     transaction = db.query(models.Transaction).filter(models.Transaction.billingId == billingId).first()
 
@@ -226,3 +226,17 @@ async def check_transaction_status(billingId: int, db: Session = Depends(get_db)
         return {"message": "Payment successful", "ResultDesc": response.get('ResultDesc')}, 200
     else:
         raise HTTPException(status_code=400, detail={"message": "Payment failed", "ResultDesc": response.get('ResultDesc')})
+
+
+@router.post('/check_transaction_status', dependencies=[Depends(get_current_user)])
+async def check_transaction_status(request: schemas.CheckTransaction, db: Session = Depends(get_db)):
+    transaction = Mpesa()
+    transaction_payload = transaction.transaction_status(transaction_id=request.transaction_id)
+    print(transaction_payload)
+    response = transaction.check_transaction_status(transaction_payload)
+
+    print('------Transaction status------')
+    print(response)
+    print('-------End of response-------')
+
+    return response

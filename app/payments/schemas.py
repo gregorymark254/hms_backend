@@ -60,6 +60,10 @@ class TransactionStatus(BaseModel):
     patientId: int
 
 
+class CheckTransaction(BaseModel):
+    transaction_id: str
+
+
 class ListTransactions(BaseModel):
     items: list[TransactionStatus]
     total: int
