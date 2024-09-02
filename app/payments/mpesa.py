@@ -166,8 +166,8 @@ class Mpesa:
             "Transaction ID": transaction_id,
             "PartyA": self.mpesa_shortcode,
             "IdentifierType": 4,
-            "ResultURL": "http://localhost/:8080/payments/check_transaction_status",
-            "QueueTimeOutURL": "http://localhost/:8080/timeout",
+            "ResultURL": "http://localhost:8000/payments/check_transaction_status",
+            "QueueTimeOutURL": "http://localhost:8000/timeout",
             "Remarks": "OK",
             "Occasion": "OK",
         }

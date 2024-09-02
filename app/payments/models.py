@@ -34,7 +34,7 @@ class Payment(Base):
     status = Column(Enum(PaymentStatusEnum), nullable=False, default=PaymentStatusEnum.Completed)
 
     billings = relationship("Billing", back_populates="payment", lazy='joined')
-    patient = relationship("Patient", back_populates="payment", lazy='joined')
+    patient = relationship("Patient", back_populates="payment")
 
     def to_json(self):
         patient_name = self.patient.firstName + " " + self.patient.lastName if self.patient else None
