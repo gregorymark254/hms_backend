@@ -176,8 +176,8 @@ async def process_response(request: Request, db: Session = Depends(get_db)):
         db.close()
 
 
-@router.get('/transaction_status', response_model=schemas.ListTransactions, dependencies=[Depends(get_current_user)])
-async def get_transaction_status(db: Session = Depends(get_db), pagination: Paginator = Depends()):
+@router.get('/payment_status', response_model=schemas.ListTransactions, dependencies=[Depends(get_current_user)])
+async def get_payment_status(db: Session = Depends(get_db), pagination: Paginator = Depends()):
     query = db.query(models.Transaction)
     total = query.count()
     transaction_status = query.offset(pagination.offset).limit(pagination.limit).all()
@@ -189,8 +189,8 @@ async def get_transaction_status(db: Session = Depends(get_db), pagination: Pagi
 * POLLING TRANSACTIONS
 * THIS USED WHEN CHECKING IF A PAYMENT IS COMPLETE IF CALLBACK URL IS NOT REACHED AFTER STK PUSH
 '''
-@router.post('/transaction_status/{billingId}', dependencies=[Depends(get_current_user)])
-async def transaction_status(billingId: int, db: Session = Depends(get_db)):
+@router.post('/payment_status/{billingId}', dependencies=[Depends(get_current_user)])
+async def payment_status(billingId: int, db: Session = Depends(get_db)):
     # Query the database for the transaction using billingId
     transaction = db.query(models.Transaction).filter(models.Transaction.billingId == billingId).first()
 
