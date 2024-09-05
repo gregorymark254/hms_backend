@@ -2,15 +2,14 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 # Import Base here for discovery by alembic
 from app.utils.database import Base
-from app import auth, appointments, users, payments, prescription, billing, patients, medication, doctors
+from app import auth, appointments, users, payments, prescription, billing, patients, medication, doctors, reports
 app = FastAPI()
 
 
 origins = [
-    # "http://localhost:3000",
-    # "http://localhost:3001",
-    # "https://medixsolutions.vercel.app"
-    '*'
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "https://medixsolutions.vercel.app"
 ]
 
 app.add_middleware(
@@ -36,3 +35,4 @@ app.include_router(medication.router, prefix="/medication", tags=["medication"])
 app.include_router(patients.router, prefix="/patients", tags=["patients"])
 app.include_router(payments.router, prefix="/payments", tags=["payments"])
 app.include_router(prescription.router, prefix="/prescription", tags=["prescription"])
+app.include_router(reports.router, prefix="/reports", tags=["Reports"])

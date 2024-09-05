@@ -175,7 +175,7 @@ class Mpesa:
         return transaction_payload
 
 
-    def check_transaction_status(self, transaction_payload):
+    def check_transaction_status(self, payload):
         print('------Checking transaction status------')
 
         access_token = self.access_token if self.validate_access_token() else self.get_access_token()
@@ -185,7 +185,7 @@ class Mpesa:
         }
 
         try:
-            response = requests.post(TRANSACTION_STATUS, data=json.dumps(transaction_payload), headers=headers)
+            response = requests.post(TRANSACTION_STATUS, data=json.dumps(payload), headers=headers)
             result = response.json()
             print('Transaction status code:', response.status_code)
             print('--------Received transaction status--------')

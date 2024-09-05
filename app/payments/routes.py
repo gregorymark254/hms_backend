@@ -229,10 +229,9 @@ async def payment_status(billingId: int, db: Session = Depends(get_db)):
 
 
 @router.post('/check_transaction_status', dependencies=[Depends(get_current_user)])
-async def check_transaction_status(request: schemas.CheckTransaction, db: Session = Depends(get_db)):
+async def check_transaction_status(request: schemas.CheckTransaction):
     transaction = Mpesa()
     transaction_payload = transaction.transaction_status(transaction_id=request.transaction_id)
-    print(transaction_payload)
     response = transaction.check_transaction_status(transaction_payload)
 
     print('------Transaction status------')
