@@ -8,8 +8,12 @@ from ..utils.pagination import Pagination, Paginator
 
 
 @router.get('/', response_model=schemas.ListUsers, dependencies=[Depends(get_admin)])
-async def get_users(db: Session = Depends(get_db), pagination: Paginator = Depends()):
+async def get_users(email:str | None = None, db: Session = Depends(get_db), pagination: Paginator = Depends()):
     query = db.query(models.User)
+
+    if email:
+        query = query.filter_by(email=email)
+
     total = query.count()
     users = query.offset(pagination.offset).limit(pagination.limit).all()
     count = len(users)
