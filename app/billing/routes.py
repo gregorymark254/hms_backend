@@ -1,4 +1,3 @@
-from dns.e164 import query
 from fastapi import Depends, HTTPException
 from sqlalchemy import desc
 from sqlalchemy.orm import Session, joinedload
