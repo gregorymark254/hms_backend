@@ -12,7 +12,7 @@ from ..utils.pagination import Pagination, Paginator
 from ..billing import models as billing_models
 
 @router.get('/', response_model=schemas.ListPayment, dependencies=[Depends(get_current_user)])
-async def get_payments(transactionId:str | None = None, db: Session = Depends(get_db), pagination: Paginator = Depends()):
+async def get_payments(db: Session = Depends(get_db), pagination: Paginator = Depends()):
     query = db.query(models.Payment).options(joinedload(models.Payment.patient))
     total = query.count()
     payments = query.order_by(desc(models.Payment.paymentId)).offset(pagination.offset).limit(pagination.limit).all()
